@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from contextlib import ExitStack
 from typing import Annotated,TypedDict
+from dataclasses import asdict
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -45,12 +46,13 @@ class HNGDAgentGraph:
         self.graph = self._build_graph()
 
 
-    def _node_analyzer(self, state: GraphState) -> dict:
+    def _node_analyzer(self, state):
         result = self.analyzer.analyze(state["question"], history=state.get("messages", []))
-        return {"analyzer_result": result}
+        return {"analyzer_result": asdict(result)}
 
     def _node_legal_rag(self, state: GraphState) -> dict:
-        rag_result = self.legal_rag_node.run(state["question"], state["analyzer_result"])
+        ar = AnalyzerResult(**state["analyzer_result"])
+        rag_result = self.legal_rag_node.run(state["question"], ar)
         g = rag_result.generated
         return {
             "answer": g.answer,
@@ -75,8 +77,8 @@ class HNGDAgentGraph:
 
 
     @staticmethod
-    def _route(state: GraphState) -> str:
-        category = state["analyzer_result"].category
+    def _route(state):
+        category = state["analyzer_result"]["category"]
         mapping = {
             "legal_rag": "legal_rag",
             "chit_chat": "chit_chat",

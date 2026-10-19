@@ -26,11 +26,12 @@ def split_docx_legal(elements: list[dict], source_name: str,
     current_dieu_title = ""
     current_khoan = None
     current_khoan_opening = ""
-    current_khoan_has_diem = False  # MỚI: đánh dấu khoản hiện tại đã sinh chunk điểm (a,b,c..) hay chưa
+    current_khoan_has_diem = False  
     buffer = []
     dieu_body = []
     pending_dieu_number = None
     stop_processing = False
+    last_diem_chunk = None
 
     def flush_khoan_as_chunk():
         # SỬA: nếu khoản này đã có các điểm a,b,c... thì nội dung câu mở đầu đã được
@@ -43,7 +44,7 @@ def split_docx_legal(elements: list[dict], source_name: str,
                 metadata={"source": source_name, "chuong": current_chuong, "muc": current_muc,
                           "dieu": current_dieu, "khoan": current_khoan, "diem": None}
             ))
-        buffer.clear()  # SỬA: clear vô điều kiện, không phụ thuộc current_dieu
+        buffer.clear()  # clear vô điều kiện, không phụ thuộc current_dieu
 
     def flush_dieu_body():
         if dieu_body and current_dieu:
@@ -53,10 +54,9 @@ def split_docx_legal(elements: list[dict], source_name: str,
                 metadata={"source": source_name, "chuong": current_chuong, "muc": current_muc,
                           "dieu": current_dieu, "khoan": None, "diem": None}
             ))
-        dieu_body.clear()  # SỬA: clear vô điều kiện
+        dieu_body.clear() 
 
     def reset_state_on_heading():
-        """MỚI: gọi khi gặp Chương/Mục -- xóa sạch mọi state dở dang, tránh rò rỉ sang Điều sau."""
         nonlocal current_dieu, current_khoan, current_khoan_opening, current_dieu_title, current_khoan_has_diem
         current_dieu = None
         current_khoan = None
@@ -81,7 +81,7 @@ def split_docx_legal(elements: list[dict], source_name: str,
         if chuong_match:
             flush_khoan_as_chunk()
             flush_dieu_body()
-            reset_state_on_heading()          # SỬA: reset đầy đủ
+            reset_state_on_heading()         
             current_chuong = chuong_match.group(1)
             current_muc = None
             continue
@@ -90,7 +90,7 @@ def split_docx_legal(elements: list[dict], source_name: str,
         if muc_match:
             flush_khoan_as_chunk()
             flush_dieu_body()
-            reset_state_on_heading()          # SỬA: reset đầy đủ
+            reset_state_on_heading()         
             current_muc = muc_match.group(1)
             continue
 
@@ -127,20 +127,22 @@ def split_docx_legal(elements: list[dict], source_name: str,
 
         diem_match = re.match(r"([a-zđê])\)\s", text)
         if diem_match and current_khoan:
-            diem_ky_hieu = diem_match.group(1)
-            current_khoan_has_diem = True  # SỬA: đánh dấu để flush_khoan_as_chunk() không tạo chunk thừa nữa
-            content = f"{current_dieu_title}\n{current_khoan_opening}\n{text}".strip()
-            chunks.append(LCDocument(
-                page_content=content,
+            current_khoan_has_diem = True
+            last_diem_chunk = LCDocument(
+                page_content=f"{current_dieu_title}\n{current_khoan_opening}\n{text}".strip(),
                 metadata={"source": source_name, "chuong": current_chuong, "muc": current_muc,
-                          "dieu": current_dieu, "khoan": current_khoan, "diem": diem_ky_hieu}
-            ))
+                        "dieu": current_dieu, "khoan": current_khoan, "diem": diem_match.group(1)},
+            )
+            chunks.append(last_diem_chunk)
             continue
 
 
         if current_khoan and current_dieu:
-            buffer.append(text)
-            current_khoan_opening += "\n" + text
+            if current_khoan_has_diem and last_diem_chunk is not None:
+                last_diem_chunk.page_content += "\n" + text     
+            else:
+                buffer.append(text)
+                current_khoan_opening += "\n" + text
         elif current_dieu:
             dieu_body.append(text)
 
@@ -150,7 +152,6 @@ def split_docx_legal(elements: list[dict], source_name: str,
 
 
 def print_debug_report(chunks: list[LCDocument]):
-    """Hàm kiểm tra dùng chung cho mọi file """
     print(f"Tổng số chunk: {len(chunks)}")
     no_dieu = sum(1 for c in chunks if c.metadata.get("dieu") is None)
     print(f"Chunk không xác định Điều: {no_dieu}/{len(chunks)}")

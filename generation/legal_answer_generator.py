@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -65,6 +66,8 @@ QUY TẮC BẮT BUỘC (tuân thủ TUYỆT ĐỐI, vi phạm là lỗi nghiêm 
 13. Không thêm lời chào, lời dẫn dắt dài dòng ở đầu/cuối câu trả lời.
 14. answerable = false CHỈ khi hoàn toàn không có đoạn nào liên quan; nếu có
     liên quan một phần thì answerable = true và nêu rõ phần còn thiếu ở đâu.
+15. Nếu CÂU HỎI HIỆN TẠI phụ thuộc lịch sử (VD: "còn con thì sao?"), mỗi expanded_query
+  phải là câu ĐỘC LẬP, đầy đủ chủ ngữ và bối cảnh lấy từ lịch sử.
 
 ĐỊNH DẠNG OUTPUT — CHỈ trả về CHÍNH XÁC 1 object JSON, không thêm chữ nào khác,
 không bọc ```json:
@@ -137,29 +140,30 @@ class LegalAnswerGenerator:
         return self._parse_and_sanitize(response.text, context_chunks)
 
     @staticmethod
-    def _parse_and_sanitize(raw_text: str, context_chunks: list[ContextChunk]) -> GeneratedAnswer:
+    def _parse_and_sanitize(raw_text, context_chunks):
         cleaned = raw_text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-        data = json.loads(cleaned)
+        try:
+            data = json.loads(cleaned)
+        except json.JSONDecodeError:
+            return GeneratedAnswer(False, "Xin lỗi, mình chưa xử lý được câu trả lời. Bạn thử diễn đạt lại nhé.",
+                                [], "Lỗi định dạng đầu ra")
 
-        raw_citations = data.get("citations", [])
-        valid_range = range(1, len(context_chunks) + 1)
+        n = len(context_chunks)
+        answer = data.get("answer", "")
 
-        # LỚP CHỐNG BỊA THỨ 3: chỉ giữ lại citation có số thứ tự thực sự tồn tại
-        # trong danh sách context đã đưa vào prompt -- số nào ngoài phạm vi này
-        # chắc chắn là model tự bịa, phải cắt bỏ trước khi hiện cho người dùng.
-        valid_citations = []
-        dropped = []
-        for c in raw_citations:
-            if isinstance(c, int) and c in valid_range:
-                chunk = context_chunks[c - 1]
-                valid_citations.append({"index": c, "metadata": chunk.metadata})
-            else:
-                dropped.append(c)
+        # Loại [số] nằm trong answer mà không tồn tại trong context
+        answer = re.sub(r"\[(\d+)\]", lambda m: m.group(0) if 1 <= int(m.group(1)) <= n else "", answer)
+
+        # Citation = hợp của danh sách model đưa ra và các [n] hợp lệ trong answer
+        in_text = {int(x) for x in re.findall(r"\[(\d+)\]", answer)}
+        raw = [c for c in data.get("citations", []) if isinstance(c, int)]
+        valid = sorted({c for c in raw if 1 <= c <= n} | in_text)
+        dropped = [c for c in data.get("citations", []) if not (isinstance(c, int) and 1 <= c <= n)]
 
         return GeneratedAnswer(
             answerable=bool(data.get("answerable", False)),
-            answer=data.get("answer", ""),
-            citations=valid_citations,
+            answer=answer,
+            citations=[{"index": c, "metadata": context_chunks[c - 1].metadata} for c in valid],
             missing_info=data.get("missing_info", ""),
             dropped_citations=dropped,
         )

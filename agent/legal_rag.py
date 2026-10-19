@@ -9,9 +9,8 @@ Node được gọi khi `analyzer` phân loại category="legal_rag". Nhiệm v�
     4. Convert sang ContextChunk rồi đưa qua LegalAnswerGenerator để sinh câu trả lời cuối
 
 Vì sao phải gọi retrieval nhiều lần (theo từng expanded_query) thay vì 1 lần?
-    Đây chính là bước tác giả gốc đo được hiệu quả nhất: viết lại câu hỏi thành
-    nhiều cách diễn đạt kéo Recall@10 từ 0,324 -> 0,581. Nếu chỉ dùng đúng 1
-    câu hỏi gốc để retrieve thì bỏ lỡ phần lớn lợi ích của bước analyzer.
+    viết lại câu hỏi thành nhiều cách diễn đạt kéo Recall@10 từ 0,324 -> 0,581. 
+    Nếu chỉ dùng đúng 1 câu hỏi gốc để retrieve thì bỏ lỡ phần lớn lợi ích của bước analyzer.
 
 Cách dùng (test độc lập, ráp cả 3 file lại thành 1 luồng hoàn chỉnh):
     python agent/legal_rag.py "vợ nhận được gì sau khi ly hôn"
@@ -47,10 +46,12 @@ def _merge_dedupe(all_results: list[list[RetrievedChunk]]) -> list[RetrievedChun
     ra 1 chunk thì chunk đó càng có khả năng liên quan thật sự)."""
     merged: dict[str, RetrievedChunk] = {}
     for results in all_results:
-        for chunk in results:
-            key = chunk.chunk_id
-            if key not in merged or chunk.rrf_score > merged[key].rrf_score:
-                merged[key] = chunk
+        for c in results:
+            k = c.chunk_id
+            if k in merged:
+                merged[k].rrf_score += c.rrf_score   # nhiều query cùng tìm ra -> điểm cao hơn
+            else:
+                merged[k] = c
     return sorted(merged.values(), key=lambda c: c.rrf_score, reverse=True)
 
 
@@ -64,13 +65,16 @@ class LegalRagNode:
         self.generator = LegalAnswerGenerator()
 
     def run(self, question: str, analyzer_result: AnalyzerResult) -> LegalRagResult:
-        queries = [question] + list(analyzer_result.expanded_queries)
+        # dùng resolved_question (câu hỏi đã được analyzer viết lại đầy đủ ngữ cảnh)
+        effective_question = analyzer_result.resolved_question or question
+
+        queries = [effective_question] + list(analyzer_result.expanded_queries)
 
         all_results = [self.retriever.retrieve(q) for q in queries]
         merged = _merge_dedupe(all_results)[:MAX_CONTEXT_CHUNKS]
 
         context_chunks = _to_context_chunks(merged)
-        generated = self.generator.generate(question, context_chunks)
+        generated = self.generator.generate(effective_question, context_chunks)
 
         return LegalRagResult(generated=generated, num_chunks_used=len(context_chunks))
 

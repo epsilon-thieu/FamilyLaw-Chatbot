@@ -18,7 +18,7 @@ Cài đặt trước khi chạy (đã cài ở bước indexing rồi thì bỏ 
     pip install rank-bm25 pyvi qdrant-client sentence-transformers
 
 Cách dùng:
-    python retrieval/hybrid_retriever.py "đèn vàng có được vượt không"
+    python retrieval/hybrid_retriever.py "ly hôn thì phải làm những thủ tục gì?"
 """
 from __future__ import annotations
 
@@ -43,12 +43,12 @@ SPARSE_TOP_K = 20
 RRF_K = 60  # hằng số chuẩn trong công thức RRF gốc (Cormack et al., 2009)
 FUSED_TOP_K = 10  # số đoạn cuối cùng trả về sau khi trộn + mở rộng
 
-SIBLING_WINDOW = 2  # kéo thêm tối đa 2 Khoản liền trước/liền sau
+SIBLING_WINDOW = 1  # kéo thêm tối đa 2 Khoản liền trước/liền sau
 DIVERSIFY_CAP = max(1, round(math.log(FUSED_TOP_K + 1, 2)))  # ~log_k=10 -> cap nhỏ
 
-CROSS_REF_PATTERN = re.compile(
-    r"(?:theo|tại)\s+[Kk]hoản\s+(\d+)\s*(?:[,.]?\s*)?[Đđ]iều\s+(\d+)"
-)
+CROSS_REF_PATTERN = re.compile(r"[Kk]hoản\s+(\d+)\s*,?\s*(?:của\s+)?[Đđ]iều\s+(\d+)")
+_SAME_DOC = re.compile(r"^\s*(?:của\s+)?(?:Bộ luật|Luật|Nghị định|Thông tư|Nghị quyết)\s+này")
+_OTHER_DOC = re.compile(r"^\s*của\s+")
 
 PROJECT_ROOT = Path(__file__).parent.parent
 BM25_CACHE_PATH = PROJECT_ROOT / "data" / "bm25_cache.pkl"
@@ -76,9 +76,8 @@ class RetrievedChunk:
         )
 
 
-def tokenize_vi(text: str) -> list[str]:
-    """Giống hệt bước tokenize lúc build BM25 cache — PHẢI đồng nhất, không thì lệch điểm."""
-    return ViTokenizer.tokenize(text).split()
+def tokenize_vi(text):
+    return ViTokenizer.tokenize(text.lower()).split()
 
 
 class HybridRetriever:
@@ -149,8 +148,8 @@ class HybridRetriever:
     def _sparse_search(self, query: str, top_k: int = SPARSE_TOP_K) -> list[RetrievedChunk]:
         tokenized_query = tokenize_vi(query)
         scores = self.bm25.get_scores(tokenized_query)
-        ranked_idx = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:top_k]
-
+        ranked_idx = [i for i in sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:top_k]
+                    if scores[i] > 0]
         results = []
         for rank, idx in enumerate(ranked_idx):
             doc = self.documents[idx]
@@ -189,74 +188,63 @@ class HybridRetriever:
 
         return sorted(merged.values(), key=lambda c: c.rrf_score, reverse=True)
 
-    # ---------- 4. Sibling expansion ----------
-    def _add_siblings(self, chunks: list[RetrievedChunk]) -> list[RetrievedChunk]:
-        """Kéo thêm tối đa SIBLING_WINDOW Khoản liền trước/liền sau trong cùng 1 Điều.
-        Lý do: mức phạt tiền và mức trừ điểm của NĐ 168 hay nằm ở 2 Khoản khác nhau
-        trong cùng 1 Điều -> nếu chỉ lấy đúng đoạn khớp thì dễ trả lời thiếu nửa kia."""
-        extra: list[RetrievedChunk] = []
-        seen_ids = {c.chunk_id for c in chunks}
-
+    # 4. Sibling expansion 
+    def _add_siblings(self, chunks):
+        extra, seen = [], {c.chunk_id for c in chunks}
         for chunk in list(chunks):
             meta = chunk.metadata
-            key = (meta.get("source"), meta.get("chuong"), meta.get("muc"), meta.get("dieu"))
-            siblings_idx = self._by_article.get(key, [])
-            if not siblings_idx:
-                continue
             try:
-                pos = next(
-                    i for i, idx in enumerate(siblings_idx)
-                    if self.documents[idx]["page_content"] == chunk.page_content
-                )
-            except StopIteration:
-                continue
-
-            lo = max(0, pos - SIBLING_WINDOW)
-            hi = min(len(siblings_idx), pos + SIBLING_WINDOW + 1)
-            for idx in siblings_idx[lo:hi]:
+                k = int(meta.get("khoan"))
+            except (TypeError, ValueError):
+                continue  # chunk thân Điều (khoan=None) không có sibling theo Khoản
+            key = (meta.get("source"), meta.get("chuong"), meta.get("muc"), meta.get("dieu"))
+            for idx in self._by_article.get(key, []):
                 doc = self.documents[idx]
-                sib = RetrievedChunk(page_content=doc["page_content"], metadata=doc["metadata"], source=["sibling"])
-                if sib.chunk_id not in seen_ids:
-                    seen_ids.add(sib.chunk_id)
+                try:
+                    k2 = int(doc["metadata"].get("khoan"))
+                except (TypeError, ValueError):
+                    continue
+                if abs(k2 - k) > SIBLING_WINDOW:
+                    continue
+                sib = RetrievedChunk(doc["page_content"], doc["metadata"], source=["sibling"],
+                                    rrf_score=chunk.rrf_score * 0.5)
+                if sib.chunk_id not in seen:
+                    seen.add(sib.chunk_id)
                     extra.append(sib)
-
         return chunks + extra
 
-    # ---------- 5. Cross-reference ----------
-    def _add_cross_refs(self, chunks: list[RetrievedChunk]) -> list[RetrievedChunk]:
-        """Bắt cụm 'theo Khoản X Điều Y' rồi kéo luôn đoạn được dẫn tới, để không trả lời
-        được nửa này mà bỏ sót nửa kia (VD: điều khoản chuyển tiếp, điều dẫn chiếu)."""
-        extra: list[RetrievedChunk] = []
-        seen_ids = {c.chunk_id for c in chunks}
-
+    #5. Cross-reference
+    def _add_cross_refs(self, chunks):
+        extra, seen = [], {c.chunk_id for c in chunks}
         for chunk in list(chunks):
-            meta = chunk.metadata
-            # Tham chiếu chéo trong luật thường trỏ tới Điều khác NHƯNG CÙNG văn bản
-            # (source) và cùng Chương/Mục hiện tại không nhất thiết đúng, nên chỉ khóa
-            # theo source; chuong/muc để None cho khớp mọi Chương/Mục trong văn bản đó.
-            for khoan_ref, dieu_ref in CROSS_REF_PATTERN.findall(chunk.page_content):
-                key2 = (meta.get("source"), dieu_ref)
-                for idx in self._by_source_dieu.get(key2, []):
+            text = chunk.page_content
+            for m in CROSS_REF_PATTERN.finditer(text):
+                tail = text[m.end(): m.end() + 40]
+                if _OTHER_DOC.match(tail) and not _SAME_DOC.match(tail):
+                    continue  # trỏ sang văn bản khác, không kéo nhầm Điều cùng số
+                khoan_ref, dieu_ref = m.groups()
+                for idx in self._by_source_dieu.get((chunk.metadata.get("source"), dieu_ref), []):
                     doc = self.documents[idx]
                     if str(doc["metadata"].get("khoan")) != khoan_ref:
                         continue
-                    ref = RetrievedChunk(page_content=doc["page_content"], metadata=doc["metadata"], source=["cross_ref"])
-                    if ref.chunk_id not in seen_ids:
-                        seen_ids.add(ref.chunk_id)
+                    ref = RetrievedChunk(doc["page_content"], doc["metadata"], source=["cross_ref"],
+                                        rrf_score=chunk.rrf_score * 0.5)
+                    if ref.chunk_id not in seen:
+                        seen.add(ref.chunk_id)
                         extra.append(ref)
-
         return chunks + extra
 
     # ---------- 6. Diversify ----------
     @staticmethod
-    def _diversify(chunks: list[RetrievedChunk], cap: int = DIVERSIFY_CAP) -> list[RetrievedChunk]:
-        """Cap số đoạn cùng 1 Điều để tránh 1 Điều chiếm hết top-k, giữ nguyên thứ tự
-        rrf_score giảm dần khi chọn."""
-        counts: dict[tuple, int] = {}
-        result = []
+    def _diversify(chunks, cap=DIVERSIFY_CAP):
+        chunks = sorted(chunks, key=lambda c: c.rrf_score, reverse=True)
+        counts, result = {}, []
         for chunk in chunks:
-            meta = chunk.metadata
-            key = (meta.get("source"), meta.get("chuong"), meta.get("muc"), meta.get("dieu"))
+            if chunk.source[0] in ("sibling", "cross_ref"):
+                result.append(chunk)
+                continue
+            m = chunk.metadata
+            key = (m.get("source"), m.get("chuong"), m.get("muc"), m.get("dieu"))
             if counts.get(key, 0) >= cap:
                 continue
             counts[key] = counts.get(key, 0) + 1

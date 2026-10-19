@@ -37,12 +37,31 @@ Với mỗi câu hỏi, hãy phân tích và trả về CHÍNH XÁC 1 object JSO
 không thêm ```json, theo đúng khuôn sau:
 
 {{
+  "resolved_question": "<câu hỏi đã viết lại, xem QUY TẮC resolved_question bên dưới>",
   "category": "<1 trong 4 giá trị: {CATEGORIES}>",
   "intent": "<mô tả ngắn gọn ý định câu hỏi, 1 câu tiếng Việt>",
   "topic": "<1 trong các giá trị: {TOPICS}>",
   "relationship_role": "<1 trong các giá trị: {RELATIONSHIP_ROLES}>",
   "expanded_queries": ["<cách diễn đạt lại 1>", "<cách diễn đạt lại 2>", "<cách diễn đạt lại 3>"]
 }}
+
+QUY TẮC resolved_question (LÀM TRƯỚC TIÊN, các trường khác dựa vào kết quả này):
+- LỊCH SỬ CHÁT bên dưới (nếu có) được đánh số theo "Lượt N". Đọc kỹ để xác định
+  CÂU HỎI HIỆN TẠI có đang tham chiếu đến một lượt hỏi trước đó hay không
+  (VD: "quay lại câu hỏi đầu tiên", "câu lúc nãy", "như tôi hỏi ở trên",
+  "ý thứ hai ấy", "câu hỏi thứ 2").
+- Nếu có tham chiếu: viết lại thành MỘT câu hỏi pháp lý đầy đủ, độc lập,
+  không cần ngữ cảnh bên ngoài để hiểu -- tức là thay cụm tham chiếu bằng
+  đúng nội dung câu hỏi gốc ở lượt được tham chiếu tới.
+  VD: Lượt 1 hỏi "điều kiện ly hôn đơn phương là gì", lượt hiện tại hỏi
+  "quay lại câu hỏi đầu tiên" -> resolved_question = "điều kiện ly hôn đơn phương là gì".
+- Nếu câu hỏi hiện tại đã tự đầy đủ, không tham chiếu gì tới lượt trước:
+  resolved_question = nguyên văn câu hỏi hiện tại, không đổi.
+- Nếu câu hỏi tham chiếu tới một lượt KHÔNG có trong LỊCH SỬ CHÁT được cung cấp
+  (vì đã ở ngoài cửa sổ lịch sử), để resolved_question = nguyên văn câu hỏi hiện tại
+  và intent phải nêu rõ "không tìm thấy lượt được tham chiếu trong lịch sử gần đây".
+- TẤT CẢ các trường category/topic/expanded_queries bên dưới PHẢI được xác định
+  dựa trên resolved_question, KHÔNG dựa trên câu hỏi tham chiếu gốc.
 
 QUY TẮC PHÂN LOẠI category:
 - "legal_rag": câu hỏi cần tra cứu Luật Hôn nhân & Gia đình, Nghị định/Thông tư liên quan
@@ -73,10 +92,11 @@ class AnalyzerResult:
     intent: str
     topic: str
     relationship_role: str
+    resolved_question: str = ""
     expanded_queries: list[str] = field(default_factory=list)
 
     @classmethod
-    def from_json_text(cls, text: str) -> "AnalyzerResult":
+    def from_json_text(cls, text: str, fallback_question: str = "") -> "AnalyzerResult":
         # Phòng trường hợp model lỡ bọc ```json ... ``` dù đã cấm trong prompt
         cleaned = text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
         data = json.loads(cleaned)
@@ -93,11 +113,14 @@ class AnalyzerResult:
         if role not in RELATIONSHIP_ROLES:
             role = "khong_ro"
 
+        resolved_question = data.get("resolved_question") or fallback_question
+
         return cls(
             category=category,
             intent=data.get("intent", ""),
             topic=topic,
             relationship_role=role,
+            resolved_question=resolved_question,
             expanded_queries=data.get("expanded_queries", []) if category == "legal_rag" else [],
         )
 
@@ -106,18 +129,43 @@ class Analyzer:
     def __init__(self, api_key: str | None = None):
         self.client = genai.Client(api_key=api_key or os.environ.get("GOOGLE_API_KEY"))
 
+    MAX_HISTORY_TURNS = 20
+
     def analyze(self, question: str, history: list = None) -> AnalyzerResult:
         history_text = ""
-        # Lấy tối đa 4-6 tin nhắn gần nhất để không làm loãng prompt
         if history and len(history) > 1:
-            recent_msgs = history[-5:-1]  # Bỏ tin nhắn hiện tại vừa add
-            history_text = "LỊCH SỬ CHÁT GẦN ĐÂY:\n"
-            for msg in recent_msgs:
-                # Format tin nhắn dạng [User/Bot]: content
+            # Bỏ tin nhắn hiện tại vừa add (phần tử cuối), lấy phần còn lại
+            past_msgs = history[:-1]
+
+            def _role_and_content(msg):
                 role = "User" if getattr(msg, 'type', '') == 'human' or (isinstance(msg, tuple) and msg[0] == 'user') else "Bot"
                 content = getattr(msg, 'content', str(msg[1]) if isinstance(msg, tuple) else str(msg))
-                history_text += f"{role}: {content}\n"
-            history_text += "\n"
+                return role, content
+
+            # Đánh số theo TURN (1 turn = 1 câu User + câu Bot trả lời kế tiếp,
+            # nếu có), để model có thể map trực tiếp "câu hỏi đầu tiên" -> Lượt 1,
+            # "câu hỏi thứ hai" -> Lượt 2, thay vì phải tự đếm qua text thô.
+            turns: list[str] = []
+            turn_num = 0
+            i = 0
+            while i < len(past_msgs):
+                role, content = _role_and_content(past_msgs[i])
+                if role == "User":
+                    turn_num += 1
+                    turn_lines = [f"Lượt {turn_num} - User: {content}"]
+                    if i + 1 < len(past_msgs):
+                        next_role, next_content = _role_and_content(past_msgs[i + 1])
+                        if next_role == "Bot":
+                            turn_lines.append(f"Lượt {turn_num} - Bot: {next_content}")
+                            i += 1
+                    turns.append("\n".join(turn_lines))
+                i += 1
+
+            kept_turns = turns[-self.MAX_HISTORY_TURNS:]
+
+            history_text = "LỊCH SỬ CHÁT (đánh số theo lượt hỏi của User):\n"
+            history_text += "\n".join(kept_turns)
+            history_text += "\n\n"
 
         prompt_input = f"{history_text}CÂU HỎI HIỆN TẠI: {question}"
 
@@ -130,7 +178,7 @@ class Analyzer:
                 "temperature": 0,
             },
         )
-        return AnalyzerResult.from_json_text(response.text)
+        return AnalyzerResult.from_json_text(response.text, fallback_question=question)
 
 
 def main():
