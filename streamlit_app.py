@@ -11,7 +11,7 @@ from agent.graph import HNGDAgentGraph
 # Cấu hình trang (Không dùng icon)
 # ============================================================
 st.set_page_config(
-    page_title="Trợ lý Luật Hôn nhân & Gia đình",
+    page_title="Trợ lý LLLLLLLLLLuật Hôn nhân & Gia đình",
     page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded",
