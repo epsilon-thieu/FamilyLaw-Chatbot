@@ -21,258 +21,224 @@ if "GOOGLE_API_KEY" in st.secrets:
     os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
 
 # ============================================================
-# Giao diện (CSS) — Thiết kế mới: Thân thiện, hiện đại, dễ dùng
+# CSS — Monochrome · Sharp · Premium
 # ============================================================
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
     /* ── Force light mode ── */
     :root, .stApp {
-        --background-color: #f8f9fc !important;
-        --secondary-background-color: #ffffff !important;
-        --text-color: #1e293b !important;
-        --primary-color: #6366f1 !important;
+        --background-color: #ffffff !important;
+        --secondary-background-color: #fafafa !important;
+        --text-color: #171717 !important;
+        --primary-color: #171717 !important;
         color-scheme: light !important;
     }
 
     html, body, [class*="css"] {
-        font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
     :root {
-        --ink:          #1e293b;
-        --ink-soft:     #64748b;
-        --ink-lighter:  #94a3b8;
-        --primary:      #6366f1;
-        --primary-soft: #818cf8;
-        --primary-bg:   #eef2ff;
-        --primary-dk:   #4f46e5;
-        --warm:         #f59e0b;
-        --warm-soft:    #fbbf24;
-        --warm-bg:      #fffbeb;
-        --warm-dk:      #d97706;
-        --success:      #10b981;
-        --success-dk:   #059669;
-        --bg:           #f8f9fc;
-        --card:         #ffffff;
-        --border:       #e2e8f0;
-        --border-soft:  #f1f5f9;
-        --shadow-sm:    0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
-        --shadow-md:    0 4px 12px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
-        --shadow-lg:    0 10px 25px rgba(0,0,0,0.07), 0 4px 10px rgba(0,0,0,0.04);
-        --radius-sm:    10px;
-        --radius-md:    16px;
-        --radius-lg:    24px;
+        --black:        #000000;
+        --ink:          #171717;
+        --ink-2:        #262626;
+        --ink-3:        #404040;
+        --gray-5:       #525252;
+        --gray-4:       #737373;
+        --gray-3:       #a3a3a3;
+        --gray-2:       #d4d4d4;
+        --gray-1:       #e5e5e5;
+        --gray-0:       #f5f5f5;
+        --white:        #ffffff;
+        --bg:           #ffffff;
+        --bg-alt:       #fafafa;
+        --border:       #e5e5e5;
+        --border-soft:  #f0f0f0;
     }
 
     /* ── App background ── */
-    .stApp {
-        background: linear-gradient(135deg, #f8f9fc 0%, #eef2ff 50%, #fefce8 100%);
-    }
+    .stApp { background: var(--bg); }
 
     #MainMenu, footer { visibility: hidden; }
 
     /* ── Scrollbar ── */
-    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    ::-webkit-scrollbar-thumb { background: var(--gray-2); border-radius: 0; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--gray-3); }
 
     /* ══════════════════════════════════════════════
        SIDEBAR
        ══════════════════════════════════════════════ */
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
-        border-right: none;
-        box-shadow: 4px 0 24px rgba(30, 27, 75, 0.15);
+        background: var(--ink);
+        border-right: 1px solid #2a2a2a;
     }
     section[data-testid="stSidebar"] * {
-        color: #e0e7ff !important;
+        color: #d4d4d4 !important;
     }
 
-    /* ── Sidebar buttons (conversation list) ── */
     section[data-testid="stSidebar"] .stButton button {
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: var(--radius-sm);
+        background: transparent;
+        border: 1px solid #333333;
+        border-radius: 0;
         text-align: left;
-        font-size: 13.5px;
-        font-weight: 500;
-        padding: 11px 14px;
-        transition: all .2s ease;
-        backdrop-filter: blur(4px);
+        font-size: 13px;
+        font-weight: 400;
+        padding: 10px 12px;
+        transition: background .15s ease, border-color .15s ease;
+        letter-spacing: 0.01em;
     }
     section[data-testid="stSidebar"] .stButton button:hover {
-        background: rgba(255,255,255,0.12);
-        border-color: rgba(255,255,255,0.2);
-        transform: translateX(3px);
+        background: #262626;
+        border-color: #525252;
     }
 
-    /* ── Sidebar brand ── */
     .sidebar-brand {
-        font-size: 21px;
-        font-weight: 800;
+        font-size: 15px;
+        font-weight: 600;
         color: #ffffff !important;
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 4px 0 2px 0;
-        letter-spacing: -0.02em;
+        padding: 2px 0;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
     }
-    .sidebar-brand-icon {
-        width: 38px; height: 38px;
-        background: linear-gradient(135deg, var(--warm) 0%, #f97316 100%);
-        border-radius: 12px;
+    .sidebar-brand-mark {
+        width: 32px; height: 32px;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        color: var(--ink) !important;
+        font-weight: 700;
+    }
+    .sidebar-sub {
+        font-size: 11.5px;
+        color: #737373 !important;
+        margin-bottom: 24px;
+        padding-left: 42px;
+        font-weight: 400;
+        letter-spacing: 0.02em;
+    }
+    .sidebar-section-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: .14em;
+        color: #525252 !important;
+        margin: 28px 0 10px 0;
+        font-weight: 600;
+    }
+
+    /* ── "New chat" button ── */
+    div[data-testid="stSidebar"] div[data-testid="stButton"]:first-of-type button {
+        background: #ffffff !important;
+        color: #171717 !important;
+        font-weight: 600 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 11px 16px !important;
+        font-size: 13px !important;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+    div[data-testid="stSidebar"] div[data-testid="stButton"]:first-of-type button:hover {
+        background: #e5e5e5 !important;
+    }
+
+    /* ── Active conversation ── */
+    div[class*="st-key-conv_current"] button {
+        background: #262626 !important;
+        border-color: #525252 !important;
+        color: #ffffff !important;
+        font-weight: 500 !important;
+        border-left: 3px solid #ffffff !important;
+    }
+    div[class*="st-key-conv_current"] button:hover {
+        background: #333333 !important;
+    }
+
+    .sidebar-count {
+        text-align: left;
+        font-size: 11px;
+        color: #525252 !important;
+        padding: 8px 0;
+        font-weight: 400;
+        font-family: 'IBM Plex Mono', monospace;
+        letter-spacing: 0.02em;
+    }
+
+    /* ══════════════════════════════════════════════
+       HEADER BAR
+       ══════════════════════════════════════════════ */
+    .header-bar {
+        border-bottom: 1px solid var(--border);
+        padding: 20px 0 18px 0;
+        margin-bottom: 24px;
+    }
+    .header-bar-inner {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    .header-mark {
+        width: 44px; height: 44px;
+        background: var(--ink);
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 18px;
-        box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
-    }
-    .sidebar-sub {
-        font-size: 12px;
-        color: #a5b4fc !important;
-        margin-bottom: 20px;
-        padding-left: 48px;
-        font-weight: 400;
-    }
-    .sidebar-section-label {
-        font-size: 10.5px;
-        text-transform: uppercase;
-        letter-spacing: .12em;
-        color: #818cf8 !important;
-        margin: 22px 0 10px 2px;
-        font-weight: 700;
-    }
-
-    /* ── "New chat" button — warm amber accent ── */
-    div[data-testid="stSidebar"] div[data-testid="stButton"]:first-of-type button {
-        background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%) !important;
-        color: #451a03 !important;
-        font-weight: 700 !important;
-        border: none !important;
-        border-radius: var(--radius-sm) !important;
-        box-shadow: 0 4px 16px rgba(245, 158, 11, 0.35);
-        padding: 12px 16px !important;
-        font-size: 14px !important;
-        letter-spacing: -0.01em;
-    }
-    div[data-testid="stSidebar"] div[data-testid="stButton"]:first-of-type button:hover {
-        filter: brightness(1.08);
-        transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
-    }
-
-    /* ── Active conversation: green highlight ── */
-    div[class*="st-key-conv_current"] button {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-        border: none !important;
-        color: #ffffff !important;
-        font-weight: 700 !important;
-        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
-    }
-    div[class*="st-key-conv_current"] button:hover {
-        filter: brightness(1.06);
-        transform: translateX(3px);
-    }
-
-    .sidebar-count {
-        text-align: center;
-        font-size: 11.5px;
-        color: #818cf8 !important;
-        padding: 6px 0;
-        font-weight: 500;
-    }
-
-    /* ══════════════════════════════════════════════
-       WELCOME HEADER (hero banner)
-       ══════════════════════════════════════════════ */
-    .hero-banner {
-        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 40%, #7c3aed 100%);
-        border-radius: var(--radius-lg);
-        padding: 32px 36px;
-        margin-bottom: 24px;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 12px 32px rgba(99, 102, 241, 0.2);
-    }
-    .hero-banner::before {
-        content: '';
-        position: absolute;
-        top: -40%; right: -20%;
-        width: 400px; height: 400px;
-        background: radial-gradient(circle, rgba(251, 191, 36, 0.15) 0%, transparent 70%);
-        pointer-events: none;
-    }
-    .hero-banner::after {
-        content: '';
-        position: absolute;
-        bottom: -30%; left: -10%;
-        width: 300px; height: 300px;
-        background: radial-gradient(circle, rgba(167, 139, 250, 0.2) 0%, transparent 70%);
-        pointer-events: none;
-    }
-    .hero-content {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        align-items: center;
-        gap: 20px;
-    }
-    .hero-icon {
-        width: 64px; height: 64px;
-        background: rgba(255,255,255,0.15);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 30px;
         flex-shrink: 0;
-        border: 1px solid rgba(255,255,255,0.1);
     }
-    .hero-text h1, .hero-text h1 * { color: #ffffff !important; }
-    .hero-text h1 {
-        font-size: 22px;
-        font-weight: 800;
+    .header-mark span { color: #ffffff !important; }
+    .header-text h1, .header-text h1 * { color: var(--ink) !important; }
+    .header-text h1 {
+        font-size: 18px;
+        font-weight: 700;
         margin: 0;
         line-height: 1.3;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.01em;
     }
-    .hero-text p, .hero-text p * { color: #c7d2fe !important; }
-    .hero-text p {
-        font-size: 13.5px;
-        margin: 6px 0 0 0;
+    .header-text p, .header-text p * { color: var(--gray-4) !important; }
+    .header-text p {
+        font-size: 13px;
+        margin: 3px 0 0 0;
         font-weight: 400;
-        line-height: 1.5;
     }
 
     /* ══════════════════════════════════════════════
-       CHAT BUBBLES
+       CHAT MESSAGES
        ══════════════════════════════════════════════ */
-    .chat-bubble {
+
+    /* ── User message ── */
+    .msg-user {
         padding: 16px 20px;
-        line-height: 1.75;
-        font-size: 15px;
+        line-height: 1.7;
+        font-size: 14.5px;
         font-weight: 400;
-        letter-spacing: 0.01em;
+        background: var(--ink);
+        color: #ffffff !important;
+        border-radius: 0;
     }
-    .user-bubble, .user-bubble * { color: #ffffff !important; }
-    .user-bubble {
-        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-        border-radius: 20px 20px 6px 20px;
-        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.2);
-    }
-    .assistant-bubble, .assistant-bubble * { color: var(--ink) !important; }
-    .assistant-bubble {
-        background: var(--card);
+    .msg-user, .msg-user * { color: #ffffff !important; }
+
+    /* ── Assistant message ── */
+    .msg-assistant {
+        padding: 20px 24px;
+        line-height: 1.8;
+        font-size: 14.5px;
+        font-weight: 400;
+        background: var(--bg-alt);
         border: 1px solid var(--border);
-        border-left: 4px solid var(--warm);
-        border-radius: 6px 20px 20px 20px;
-        box-shadow: var(--shadow-md);
+        border-left: 3px solid var(--ink);
+        border-radius: 0;
     }
+    .msg-assistant, .msg-assistant * { color: var(--ink) !important; }
 
     /* ══════════════════════════════════════════════
        EXPANDER (citations)
@@ -280,13 +246,14 @@ st.markdown(
     div[data-testid="stExpander"],
     div[data-testid="stExpander"] details,
     div[data-testid="stExpander"] summary {
-        background: var(--card) !important;
+        background: var(--white) !important;
+        border-radius: 0 !important;
     }
     div[data-testid="stExpander"] {
         border: 1px solid var(--border) !important;
-        border-radius: var(--radius-sm) !important;
+        border-radius: 0 !important;
         overflow: hidden;
-        margin-top: 8px;
+        margin-top: 10px;
     }
     div[data-testid="stExpander"] summary,
     div[data-testid="stExpander"] summary *,
@@ -294,206 +261,249 @@ st.markdown(
     div[data-testid="stExpander"] summary p {
         color: var(--ink) !important;
         font-weight: 600 !important;
-        font-size: 14px !important;
+        font-size: 13px !important;
+        letter-spacing: 0.02em;
     }
     div[data-testid="stExpander"] svg { fill: var(--ink) !important; }
     div[data-testid="stExpanderDetails"],
     div[data-testid="stExpanderDetails"] * {
         color: var(--ink) !important;
-        background: var(--card) !important;
+        background: var(--white) !important;
     }
 
     /* ══════════════════════════════════════════════
        CITATION CARDS
        ══════════════════════════════════════════════ */
-    .citation-card, .citation-card * { color: #92400e !important; }
+    .citation-card, .citation-card * { color: var(--ink) !important; }
     .citation-card {
-        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
-        border: 1px solid #fde68a;
-        border-left: 4px solid var(--warm);
-        border-radius: var(--radius-sm);
-        padding: 12px 16px;
-        margin-bottom: 8px;
-        font-size: 13.5px;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        background: var(--bg-alt) !important;
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--ink);
+        border-radius: 0;
+        padding: 10px 14px;
+        margin-bottom: 6px;
+        font-size: 13px;
+        transition: background .12s ease;
     }
     .citation-card:hover {
-        transform: translateX(4px);
-        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+        background: var(--gray-0) !important;
     }
-    .citation-index, .citation-index * {
+    .citation-idx {
         display: inline-block;
-        background: linear-gradient(135deg, var(--warm) 0%, var(--warm-dk) 100%) !important;
+        background: var(--ink) !important;
         color: #ffffff !important;
-        font-weight: 800;
-        border-radius: 8px;
-        padding: 2px 10px;
+        font-weight: 700;
+        padding: 1px 8px;
         margin-right: 10px;
-        font-size: 12px;
-        letter-spacing: 0.02em;
+        font-size: 11px;
+        font-family: 'IBM Plex Mono', monospace;
+        letter-spacing: 0.04em;
     }
     .citation-meta, .citation-meta * {
-        font-weight: 500;
-        font-size: 13px;
+        font-weight: 400;
+        font-size: 12.5px;
+        color: var(--gray-5) !important;
     }
 
     /* ══════════════════════════════════════════════
        CHAT INPUT
        ══════════════════════════════════════════════ */
     div[data-testid="stChatInput"] {
-        background: var(--card) !important;
-        border-radius: var(--radius-md) !important;
-        box-shadow: var(--shadow-lg);
+        background: var(--white) !important;
+        border-radius: 0 !important;
     }
     div[data-testid="stChatInput"] textarea {
-        background: var(--card) !important;
+        background: var(--white) !important;
         color: var(--ink) !important;
-        border-radius: 14px !important;
-        border: 2px solid var(--border) !important;
-        font-family: 'Be Vietnam Pro', sans-serif !important;
-        font-size: 15px !important;
-        transition: border-color 0.2s ease;
+        border-radius: 0 !important;
+        border: 1px solid var(--border) !important;
+        font-family: 'IBM Plex Sans', sans-serif !important;
+        font-size: 14.5px !important;
+        padding: 14px 16px !important;
+        min-height: 48px !important;
+        line-height: 1.5 !important;
     }
     div[data-testid="stChatInput"] textarea:focus {
-        border-color: var(--primary-soft) !important;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+        border-color: var(--ink) !important;
+        box-shadow: none !important;
+        outline: none !important;
     }
     div[data-testid="stChatInput"] textarea::placeholder {
-        color: #94a3b8 !important;
+        color: var(--gray-3) !important;
         font-weight: 400;
+    }
+    /* Fix: đảm bảo khung input không che chữ */
+    div[data-testid="stChatInput"] {
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+    div[data-testid="stBottom"] {
+        background: var(--white) !important;
+        border-top: 1px solid var(--border);
     }
 
     /* ── Spinner ── */
     div[data-testid="stSpinner"], div[data-testid="stSpinner"] * {
-        color: var(--primary) !important;
+        color: var(--gray-4) !important;
         font-weight: 500;
+        font-size: 13px;
     }
 
     /* ══════════════════════════════════════════════
-       EMPTY STATE — Welcome Screen
+       EMPTY STATE
        ══════════════════════════════════════════════ */
-    .welcome-container {
+    .welcome-block {
         text-align: center;
-        padding: 40px 20px 24px;
+        padding: 56px 20px 20px;
     }
-    .welcome-avatar {
-        width: 80px; height: 80px;
-        margin: 0 auto 16px;
-        background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
-        border-radius: 28px;
+    .welcome-mark {
+        width: 56px; height: 56px;
+        margin: 0 auto 20px;
+        background: var(--ink);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 38px;
-        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25);
-        animation: avatar-float 3s ease-in-out infinite;
     }
-    @keyframes avatar-float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-8px); }
-    }
-    .welcome-container h2, .welcome-container h2 * { color: var(--ink) !important; }
-    .welcome-container h2 {
+    .welcome-mark span {
+        color: #ffffff !important;
         font-size: 22px;
         font-weight: 700;
-        margin: 0 0 6px 0;
+        font-family: 'IBM Plex Mono', monospace;
+    }
+    .welcome-block h2, .welcome-block h2 * { color: var(--ink) !important; }
+    .welcome-block h2 {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0 0 8px 0;
         letter-spacing: -0.02em;
     }
-    .welcome-container .welcome-desc, .welcome-container .welcome-desc * { color: var(--ink-soft) !important; }
-    .welcome-container .welcome-desc {
-        font-size: 14.5px;
+    .welcome-block .welcome-desc, .welcome-block .welcome-desc * { color: var(--gray-4) !important; }
+    .welcome-block .welcome-desc {
+        font-size: 14px;
         line-height: 1.6;
-        max-width: 500px;
+        max-width: 480px;
         margin: 0 auto;
     }
 
-    /* ── Feature pills ── */
-    .feature-pills {
+    /* ── Topic tags ── */
+    .topic-tags {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 0;
         justify-content: center;
-        margin: 20px auto 8px;
-        max-width: 580px;
+        margin: 24px auto 0;
+        max-width: 560px;
     }
-    .feature-pill, .feature-pill * { color: var(--primary-dk) !important; }
-    .feature-pill {
-        background: var(--primary-bg) !important;
-        border: 1px solid #c7d2fe;
-        border-radius: 99px;
-        padding: 6px 16px;
-        font-size: 12.5px;
+    .topic-tag, .topic-tag * { color: var(--gray-5) !important; }
+    .topic-tag {
+        background: transparent !important;
+        border: 1px solid var(--border);
+        padding: 6px 14px;
+        font-size: 12px;
         font-weight: 500;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        transition: transform 0.15s ease;
-    }
-    .feature-pill:hover {
-        transform: scale(1.05);
+        letter-spacing: 0.02em;
+        margin: -0.5px;
     }
 
-    /* ── Suggestion section label ── */
-    .suggestion-label, .suggestion-label * {
-        color: var(--ink-soft) !important;
+    /* ── Section divider ── */
+    .section-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 32px 0 16px;
     }
-    .suggestion-label {
-        font-size: 13px;
+    .section-divider::before, .section-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+    .section-divider-text, .section-divider-text * {
+        color: var(--gray-3) !important;
+    }
+    .section-divider-text {
+        font-size: 11px;
         font-weight: 600;
-        text-align: center;
-        margin: 28px 0 14px 0;
-        letter-spacing: 0.01em;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        white-space: nowrap;
     }
 
     /* ── Suggestion buttons ── */
     div[class*="st-key-suggestion_"] { position: relative; z-index: 1; }
     div[class*="st-key-suggestion_"] button {
-        background: var(--card) !important;
+        background: var(--white) !important;
         color: var(--ink) !important;
-        border: 1.5px solid var(--border) !important;
-        border-radius: var(--radius-md) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 0 !important;
         text-align: left !important;
-        padding: 18px 20px !important;
-        font-size: 14px !important;
-        font-weight: 500 !important;
+        padding: 16px 18px !important;
+        font-size: 13.5px !important;
+        font-weight: 400 !important;
         width: 100%;
-        box-shadow: var(--shadow-sm);
-        transition: all .2s ease;
+        transition: all .12s ease;
         line-height: 1.5 !important;
     }
     div[class*="st-key-suggestion_"] button:hover,
     div[class*="st-key-suggestion_"] button:focus {
-        border-color: var(--primary) !important;
-        background: var(--primary-bg) !important;
-        color: var(--primary-dk) !important;
-        transform: translateY(-3px);
-        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+        border-color: var(--ink) !important;
+        background: var(--bg-alt) !important;
+        color: var(--ink) !important;
         z-index: 5;
         position: relative;
     }
     div[class*="st-key-suggestion_"] button:active {
-        color: var(--primary-dk) !important;
-        background: var(--primary-bg) !important;
-        transform: translateY(-1px);
+        background: var(--gray-0) !important;
     }
 
     /* ══════════════════════════════════════════════
-       DISCLAIMER BAR
+       DISCLAIMER
        ══════════════════════════════════════════════ */
-    .disclaimer-bar, .disclaimer-bar * { color: var(--ink-lighter) !important; }
+    .disclaimer-bar, .disclaimer-bar * { color: var(--gray-3) !important; }
     .disclaimer-bar {
         text-align: center;
-        font-size: 12px;
-        padding: 18px 0 6px 0;
+        font-size: 11px;
+        padding: 20px 0 6px 0;
         border-top: 1px solid var(--border-soft);
-        margin-top: 16px;
+        margin-top: 20px;
         font-weight: 400;
+        letter-spacing: 0.01em;
     }
-    .disclaimer-bar .disc-icon {
-        display: inline-block;
-        margin-right: 4px;
-        vertical-align: middle;
+
+    /* ══════════════════════════════════════════════
+       CHAT AVATAR OVERRIDES
+       ══════════════════════════════════════════════ */
+    /* Ẩn avatar mặc định của Streamlit, dùng avatar custom trong bubble */
+    div[data-testid="stChatMessage"] img[data-testid="chatAvatarIcon-assistant"],
+    div[data-testid="stChatMessage"] img[data-testid="chatAvatarIcon-user"] {
+        display: none !important;
     }
+
+    /* Custom avatar styling */
+    .avatar-box {
+        width: 28px; height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        font-family: 'IBM Plex Mono', monospace;
+        flex-shrink: 0;
+        margin-bottom: 6px;
+        letter-spacing: 0.02em;
+    }
+    .avatar-user {
+        background: var(--ink);
+        color: #ffffff !important;
+    }
+    .avatar-user * { color: #ffffff !important; }
+    .avatar-bot {
+        background: transparent;
+        border: 2px solid var(--ink);
+        color: var(--ink) !important;
+    }
+    .avatar-bot * { color: var(--ink) !important; }
+
     </style>
     """,
     unsafe_allow_html=True,
@@ -502,7 +512,7 @@ st.markdown(
 # ============================================================
 # Load agent 1 lần duy nhất
 # ============================================================
-@st.cache_resource(show_spinner="⏳ Đang khởi tạo mô hình (lần đầu có thể mất 1-2 phút)...")
+@st.cache_resource(show_spinner="Đang khởi tạo mô hình...")
 def load_agent():
     return HNGDAgentGraph()
 
@@ -525,7 +535,7 @@ if "pending_question" not in st.session_state:
 def new_conversation():
     conv_id = str(uuid.uuid4())
     st.session_state.conversations[conv_id] = {
-        "title": "Đoạn chat mới",
+        "title": "Cuộc trò chuyện mới",
         "messages": [],
         "created_at": datetime.now(),
     }
@@ -549,34 +559,34 @@ if not st.session_state.conversations:
     new_conversation()
 
 EXAMPLE_QUESTIONS = [
-    ("💍", "Điều kiện kết hôn", "Điều kiện để kết hôn hợp pháp tại Việt Nam là gì?"),
-    ("📄", "Thủ tục ly hôn", "Thủ tục ly hôn thuận tình cần những giấy tờ gì?"),
-    ("🏠", "Tài sản hôn nhân", "Tài sản chung và tài sản riêng trong hôn nhân được xác định thế nào?"),
-    ("👨‍👩‍👧", "Quyền nuôi con", "Quyền nuôi con sau khi ly hôn được quy định ra sao?"),
+    ("01", "Điều kiện để kết hôn hợp pháp tại Việt Nam là gì?"),
+    ("02", "Thủ tục ly hôn thuận tình cần những giấy tờ gì?"),
+    ("03", "Tài sản chung và tài sản riêng trong hôn nhân được xác định thế nào?"),
+    ("04", "Quyền nuôi con sau khi ly hôn được quy định ra sao?"),
 ]
 
 # ============================================================
-# Sidebar: danh sách hội thoại
+# Sidebar
 # ============================================================
 with st.sidebar:
     st.markdown(
         '<div class="sidebar-brand">'
-        '<div class="sidebar-brand-icon">⚖️</div>'
-        'Trợ lý Pháp lý'
+        '<div class="sidebar-brand-mark">§</div>'
+        'HNGĐ Legal'
         '</div>',
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<div class="sidebar-sub">Luật Hôn nhân &amp; Gia đình Việt Nam</div>',
+        '<div class="sidebar-sub">Luật Hôn nhân &amp; Gia đình</div>',
         unsafe_allow_html=True,
     )
 
-    if st.button("✨  Cuộc trò chuyện mới", use_container_width=True):
+    if st.button("＋  Cuộc trò chuyện mới", use_container_width=True):
         new_conversation()
         st.rerun()
 
     st.markdown(
-        '<div class="sidebar-section-label">💬 Lịch sử trò chuyện</div>',
+        '<div class="sidebar-section-label">Lịch sử</div>',
         unsafe_allow_html=True,
     )
 
@@ -591,7 +601,8 @@ with st.sidebar:
         # "conv_current" chỉ dùng cho ĐÚNG MỘT hội thoại tại một thời điểm
         # -> an toàn để dùng làm key cố định, CSS bên trên sẽ tô xanh lá.
         row_key = "conv_current" if is_current else f"conv_row_{conv_id}"
-        label = ("✅  " if is_current else "💬  ") + conv["title"]
+        prefix = "▸ " if is_current else "  "
+        label = prefix + conv["title"]
         with st.container(key=row_key):
             col_main, col_del = st.columns([5, 1])
             with col_main:
@@ -599,13 +610,13 @@ with st.sidebar:
                     st.session_state.current_conv_id = conv_id
                     st.rerun()
             with col_del:
-                if st.button("🗑️", key=f"del_{conv_id}", help="Xóa đoạn chat này"):
+                if st.button("×", key=f"del_{conv_id}", help="Xóa"):
                     delete_conversation(conv_id)
                     st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown(
-        f'<div class="sidebar-count">📂 {len(st.session_state.conversations)} đoạn chat</div>',
+        f'<div class="sidebar-count">{len(st.session_state.conversations)} conversations</div>',
         unsafe_allow_html=True,
     )
 
@@ -616,30 +627,30 @@ current_conv = st.session_state.conversations[current_conv_id]
 def render_citations(citations):
     if not citations:
         return
-    with st.expander(f"📖 Trích dẫn pháp lý ({len(citations)} nguồn)"):
+    with st.expander(f"Trích dẫn pháp lý — {len(citations)} nguồn"):
         for c in citations:
             meta = c["metadata"]
             st.markdown(
                 f'<div class="citation-card">'
-                f'<span class="citation-index">{c["index"]}</span>'
-                f'<span class="citation-meta">{meta.get("source", "")} — '
-                f'Điều {meta.get("dieu", "?")} — Khoản {meta.get("khoan", "?")}</span>'
+                f'<span class="citation-idx">{c["index"]}</span>'
+                f'<span class="citation-meta">{meta.get("source", "")} · '
+                f'Điều {meta.get("dieu", "?")} · Khoản {meta.get("khoan", "?")}</span>'
                 f'</div>',
                 unsafe_allow_html=True,
             )
 
 
 # ============================================================
-# Header chính — Hero Banner
+# Header
 # ============================================================
 st.markdown(
     """
-    <div class="hero-banner">
-        <div class="hero-content">
-            <div class="hero-icon">⚖️</div>
-            <div class="hero-text">
-                <h1>Trợ lý Luật Hôn nhân & Gia đình</h1>
-                <p>Hỏi đáp nhanh, chính xác dựa trên văn bản Luật Hôn nhân và Gia đình Việt Nam. Mọi câu trả lời đều có trích dẫn nguồn cụ thể.</p>
+    <div class="header-bar">
+        <div class="header-bar-inner">
+            <div class="header-mark"><span>§</span></div>
+            <div class="header-text">
+                <h1>Trợ lý Luật Hôn nhân &amp; Gia đình</h1>
+                <p>Hỏi đáp dựa trên văn bản pháp luật · Trích dẫn điều khoản cụ thể</p>
             </div>
         </div>
     </div>
@@ -653,48 +664,46 @@ st.markdown(
 has_messages = len(current_conv["messages"]) > 0
 
 if not has_messages:
-    # ── Welcome / Empty State ──
     st.markdown(
         """
-        <div class="welcome-container">
-            <div class="welcome-avatar">📜</div>
-            <h2>Xin chào! Mình có thể giúp gì cho bạn?</h2>
+        <div class="welcome-block">
+            <div class="welcome-mark"><span>§</span></div>
+            <h2>Bạn cần tư vấn vấn đề gì?</h2>
             <p class="welcome-desc">
-                Hãy đặt câu hỏi về Luật Hôn nhân và Gia đình — mình sẽ tra cứu
-                văn bản luật và trả lời kèm trích dẫn điều khoản cụ thể.
+                Đặt câu hỏi về Luật Hôn nhân và Gia đình — hệ thống sẽ tra cứu
+                văn bản luật và trả lời kèm trích dẫn điều khoản.
             </p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    # ── Feature pills ──
     st.markdown(
         """
-        <div class="feature-pills">
-            <span class="feature-pill">💍 Kết hôn</span>
-            <span class="feature-pill">📄 Ly hôn</span>
-            <span class="feature-pill">🏠 Tài sản</span>
-            <span class="feature-pill">👶 Nuôi con</span>
-            <span class="feature-pill">💰 Cấp dưỡng</span>
-            <span class="feature-pill">👨‍👩‍👧 Con nuôi</span>
-            <span class="feature-pill">🛡️ Giám hộ</span>
+        <div class="topic-tags">
+            <span class="topic-tag">Kết hôn</span>
+            <span class="topic-tag">Ly hôn</span>
+            <span class="topic-tag">Tài sản</span>
+            <span class="topic-tag">Nuôi con</span>
+            <span class="topic-tag">Cấp dưỡng</span>
+            <span class="topic-tag">Con nuôi</span>
+            <span class="topic-tag">Giám hộ</span>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
     st.markdown(
-        '<div class="suggestion-label">✨ Bạn có thể thử hỏi</div>',
+        '<div class="section-divider"><span class="section-divider-text">Câu hỏi mẫu</span></div>',
         unsafe_allow_html=True,
     )
 
     cols = st.columns(2)
-    for i, (icon, short_title, q) in enumerate(EXAMPLE_QUESTIONS):
+    for i, (num, q) in enumerate(EXAMPLE_QUESTIONS):
         with cols[i % 2]:
             with st.container(key=f"suggestion_{i}"):
                 if st.button(
-                    f"{icon}  {q}",
+                    f"{num}  {q}",
                     key=f"suggestion_btn_{i}",
                     use_container_width=True,
                 ):
@@ -702,18 +711,24 @@ if not has_messages:
 
 for msg in current_conv["messages"]:
     role = msg["role"]
-    avatar = "⚖️" if role == "assistant" else "🧑"
-    with st.chat_message(role, avatar=avatar):
-        bubble_class = "user-bubble" if role == "user" else "assistant-bubble"
-        st.markdown(
-            f'<div class="chat-bubble {bubble_class}">{msg["content"]}</div>',
-            unsafe_allow_html=True,
-        )
+    with st.chat_message(role):
+        if role == "user":
+            st.markdown(
+                '<div class="avatar-box avatar-user">Bạn</div>'
+                f'<div class="msg-user">{msg["content"]}</div>',
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                '<div class="avatar-box avatar-bot">§</div>'
+                f'<div class="msg-assistant">{msg["content"]}</div>',
+                unsafe_allow_html=True,
+            )
         if msg.get("citations"):
             render_citations(msg["citations"])
 
 # Câu hỏi từ gợi ý (nếu có) hoặc từ ô nhập
-question = st.chat_input("Nhập câu hỏi về Luật Hôn nhân và Gia đình...")
+question = st.chat_input("Nhập câu hỏi của bạn...")
 if st.session_state.pending_question:
     question = st.session_state.pending_question
     st.session_state.pending_question = None
@@ -724,20 +739,28 @@ if question:
         current_conv["title"] = title[:40] + ("..." if len(title) > 40 else "")
 
     current_conv["messages"].append({"role": "user", "content": question})
-    with st.chat_message("user", avatar="🧑"):
-        st.markdown(f'<div class="chat-bubble user-bubble">{question}</div>', unsafe_allow_html=True)
+    with st.chat_message("user"):
+        st.markdown(
+            '<div class="avatar-box avatar-user">Bạn</div>'
+            f'<div class="msg-user">{question}</div>',
+            unsafe_allow_html=True,
+        )
 
-    with st.chat_message("assistant", avatar="⚖️"):
-        with st.spinner("🔍 Đang tra cứu văn bản luật..."):
+    with st.chat_message("assistant"):
+        with st.spinner("Đang tra cứu văn bản luật..."):
             try:
                 final_state = agent.run(question, thread_id=current_conv_id)
-                answer = final_state.get("answer", "Xin lỗi, mình chưa có câu trả lời.")
+                answer = final_state.get("answer", "Xin lỗi, tôi chưa có câu trả lời.")
                 citations = final_state.get("citations", [])
             except Exception as e:
                 answer = f"Đã có lỗi xảy ra: {e}"
                 citations = []
 
-        st.markdown(f'<div class="chat-bubble assistant-bubble">{answer}</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="avatar-box avatar-bot">§</div>'
+            f'<div class="msg-assistant">{answer}</div>',
+            unsafe_allow_html=True,
+        )
         render_citations(citations)
 
     current_conv["messages"].append(
@@ -747,9 +770,7 @@ if question:
 
 st.markdown(
     '<div class="disclaimer-bar">'
-    '<span class="disc-icon">⚠️</span> '
-    'Thông tin do trợ lý cung cấp chỉ mang tính tham khảo, '
-    'không thay thế tư vấn pháp lý chính thức từ luật sư.'
+    'Thông tin chỉ mang tính tham khảo — không thay thế tư vấn pháp lý chính thức.'
     '</div>',
     unsafe_allow_html=True,
 )
