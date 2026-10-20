@@ -12,7 +12,7 @@ from google.genai import errors
 load_dotenv()
 
 PRIMARY_MODEL = "gemini-3.1-flash-lite"
-FALLBACK_MODEL = "gemini-2.5-flash-lite"   # model ổn định, đổi tùy bạn
+FALLBACK_MODEL = "gemini-3.1-flash-lite"   # model ổn định, đổi tùy bạn
 
 KEY_ENV_NAMES = ("GOOGLE_API_KEY", "GOOGLE_API_KEY_2")
 RETRYABLE = {429, 500, 503, 504}   # quá tải / hết quota -> đổi key
