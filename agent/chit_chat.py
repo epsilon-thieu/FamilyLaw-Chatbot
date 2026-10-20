@@ -7,6 +7,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from google import genai
+from llm_client import get_pool
 
 load_dotenv()
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -33,16 +34,12 @@ QUY TẮC:
 
 class ChitChatNode:
     def __init__(self, api_key: str | None = None):
-        self.client = genai.Client(api_key=api_key or os.getenv("GOOGLE_API_KEY"))
+        self.llm = get_pool()
 
     def run(self, question: str) -> str:
-        response = self.client.models.generate_content(
-            model=MODEL_NAME,
+        response = self.llm.generate(
             contents=question,
-            config={
-                "system_instruction": SYSTEM_PROMPT,
-                "temperature": 0.7,  # xã giao thì có thể tự nhiên hơn, không cần temperature=0
-            },
+            config={"system_instruction": SYSTEM_PROMPT, "temperature": 0.7},
         )
         return response.text.strip()
 

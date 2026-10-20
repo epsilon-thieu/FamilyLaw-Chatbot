@@ -11,15 +11,16 @@ from agent.graph import HNGDAgentGraph
 # Cấu hình trang (Không dùng icon)
 # ============================================================
 st.set_page_config(
-    page_title="Trợ lý LLLLLLLLLLuật Hôn nhân & Gia đình",
+    page_title="Trợ lý Luật Hôn nhân & Gia đình",
     page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 # ----- API key -----
-if "GOOGLE_API_KEY" in st.secrets:
-    os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
+for _k in ("GOOGLE_API_KEY", "GOOGLE_API_KEY_2"):
+    if _k in st.secrets:
+        os.environ[_k] = st.secrets[_k]
 
 # ============================================================
 # CSS — Editorial Stone & Deep Forest · 100% Square Corners · No Icons
@@ -308,7 +309,7 @@ st.markdown(
         background: #ECEAE2 !important;
         padding: 9px 14px !important;
     }
-    div[data-testid="stExpander"] summary span,
+        div[data-testid="stExpander"] summary span,
     div[data-testid="stExpander"] summary p {
         font-family: 'IBM Plex Mono', monospace !important;
         color: #141413 !important;
@@ -317,6 +318,14 @@ st.markdown(
         letter-spacing: 0.04em !important;
         text-transform: uppercase !important;
     }
+
+    /* Trả lại font icon cho mũi tên của expander */
+    div[data-testid="stExpander"] summary span[data-testid="stIconMaterial"] {
+        font-family: "Material Symbols Rounded" !important;
+        text-transform: none !important;
+        letter-spacing: normal !important;
+    }
+
     div[data-testid="stExpanderDetails"] {
         background: #FFFFFF !important;
         border-top: 1px solid #D5D1C8 !important;

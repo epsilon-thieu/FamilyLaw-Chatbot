@@ -28,6 +28,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from google import genai
+from llm_client import get_pool
 
 load_dotenv()
 
@@ -68,6 +69,12 @@ QUY TẮC BẮT BUỘC (tuân thủ TUYỆT ĐỐI, vi phạm là lỗi nghiêm 
     liên quan một phần thì answerable = true và nêu rõ phần còn thiếu ở đâu.
 15. Nếu CÂU HỎI HIỆN TẠI phụ thuộc lịch sử (VD: "còn con thì sao?"), mỗi expanded_query
   phải là câu ĐỘC LẬP, đầy đủ chủ ngữ và bối cảnh lấy từ lịch sử.
+16. Mở đầu answer bằng 1 câu trả lời trực tiếp cho câu hỏi dựa trên nội dung context có sẵn.
+    KHÔNG mở đầu bằng câu "văn bản không quy định...". Phần thiếu căn cứ (nếu có)
+    chỉ nêu ngắn gọn ở cuối answer và ở trường missing_info.
+17. Trình bày answer thành các ý tách biệt: mỗi ý một dòng bắt đầu bằng "- ",
+    các nhóm ý cách nhau bằng một dòng trống. Dùng ký tự xuống dòng "\n"
+    trong chuỗi JSON. Mỗi ý kèm trích dẫn [n] ở cuối ý.
 
 ĐỊNH DẠNG OUTPUT — CHỈ trả về CHÍNH XÁC 1 object JSON, không thêm chữ nào khác,
 không bọc ```json:
@@ -112,7 +119,7 @@ def _format_context(chunks: list[ContextChunk]) -> str:
 
 class LegalAnswerGenerator:
     def __init__(self, api_key: str | None = None):
-        self.client = genai.Client(api_key=api_key or os.getenv("GOOGLE_API_KEY"))
+        self.llm = get_pool()
 
     def generate(self, question: str, context_chunks: list[ContextChunk]) -> GeneratedAnswer:
         if not context_chunks:
@@ -127,13 +134,12 @@ class LegalAnswerGenerator:
         context_text = _format_context(context_chunks)
         user_prompt = f"Câu hỏi: {question}\n\nCác đoạn văn bản luật liên quan:\n\n{context_text}"
 
-        response = self.client.models.generate_content(
-            model=MODEL_NAME,
+        response = self.llm.generate(
             contents=user_prompt,
             config={
                 "system_instruction": SYSTEM_PROMPT,
                 "response_mime_type": "application/json",
-                "temperature": 0,  # trả lời pháp lý cần ổn định, không sáng tạo
+                "temperature": 0,
             },
         )
 

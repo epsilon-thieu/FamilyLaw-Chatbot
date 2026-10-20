@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from dotenv import load_dotenv
 
-from google import genai
+from llm_client import get_pool
 
 load_dotenv()
 
@@ -127,7 +127,7 @@ class AnalyzerResult:
 
 class Analyzer:
     def __init__(self, api_key: str | None = None):
-        self.client = genai.Client(api_key=api_key or os.environ.get("GOOGLE_API_KEY"))
+        self.llm = get_pool()
 
     MAX_HISTORY_TURNS = 20
 
@@ -169,8 +169,7 @@ class Analyzer:
 
         prompt_input = f"{history_text}CÂU HỎI HIỆN TẠI: {question}"
 
-        response = self.client.models.generate_content(
-            model=MODEL_NAME,
+        response = self.llm.generate(
             contents=prompt_input,
             config={
                 "system_instruction": SYSTEM_PROMPT,
