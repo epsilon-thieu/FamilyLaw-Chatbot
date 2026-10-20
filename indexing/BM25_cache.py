@@ -19,7 +19,7 @@ def load_chunks(path: Path) -> list[dict]:
 
 
 def tokenize_vi(text: str) -> list[str]:
-    return ViTokenizer.tokenize(text).split() # "tôi đi học tiếng anh"  --> ["tôi", "đi", "học", "tiếng_anh"]
+    return ViTokenizer.tokenize(text.lower()).split() # "tôi đi học tiếng anh"  --> ["tôi", "đi", "học", "tiếng_anh"]
 
 def main():
     print(f"source of chunk: {CHUNKS_PATH}")
