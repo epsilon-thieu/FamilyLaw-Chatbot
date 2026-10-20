@@ -8,33 +8,30 @@ import streamlit as st
 from agent.graph import HNGDAgentGraph
 
 # ============================================================
-# Cấu hình trang (Không dùng icon)
+# Cấu hình trang
 # ============================================================
 st.set_page_config(
     page_title="Trợ lý Luật Hôn nhân & Gia đình",
-    page_icon=None,
+    page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 # ----- API key -----
 for _k in ("GOOGLE_API_KEY", "GOOGLE_API_KEY_2"):
-    if _k in st.secrets:
-        os.environ[_k] = st.secrets[_k]
+    try:
+        if _k in st.secrets:
+            os.environ[_k] = st.secrets[_k]
+    except Exception:
+        pass  # chạy local: dùng .env
 
 # ============================================================
-# CSS — Editorial Stone & Deep Forest · 100% Square Corners · No Icons
+# CSS — Editorial Stone & Deep Forest · Typography Việt chuẩn mực
 # ============================================================
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
-
-    /* ── Ép toàn bộ giao diện góc vuông 0px & Khử hoàn toàn màu tím mặc định ── */
-    *, *::before, *::after {
-        border-radius: 0px !important;
-        box-shadow: none;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
     :root, .stApp {
         --primary-color: #1E3A34 !important;
@@ -44,10 +41,12 @@ st.markdown(
         color-scheme: light !important;
     }
 
-    html, body, [class*="css"] {
-        font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    /* ── Thiết lập phông chữ chuẩn tiếng Việt êm mắt, khử hoàn toàn khoảng cách chữ rời rạc ── */
+    html, body, [class*="css"], .stApp {
+        font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
         background-color: #F6F5F0 !important;
         color: #141413 !important;
+        letter-spacing: normal !important;
     }
 
     .stApp {
@@ -58,24 +57,24 @@ st.markdown(
         visibility: hidden !important;
     }
 
-    /* ── Cột nội dung chính căn giữa chuẩn Claude / Gemini ── */
+    /* ── Cột nội dung chính căn giữa chuẩn đọc ── */
     .main .block-container {
-        max-width: 800px !important;
-        padding-top: 28px !important;
+        max-width: 820px !important;
+        padding-top: 24px !important;
         padding-bottom: 140px !important;
         padding-left: 24px !important;
         padding-right: 24px !important;
         margin: 0 auto !important;
     }
 
-    /* ── Scrollbar vuông tối giản ── */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    /* ── Scrollbar thanh lịch ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #ECEAE2; }
-    ::-webkit-scrollbar-thumb { background: #C4C0B6; }
+    ::-webkit-scrollbar-thumb { background: #C8C4B8; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #1E3A34; }
 
     /* ══════════════════════════════════════════════
-       SIDEBAR — Tông xám đá ấm, thuần Typography
+       SIDEBAR — Tông xám đá ấm, bố cục thanh thoát
        ══════════════════════════════════════════════ */
     section[data-testid="stSidebar"] {
         background: #ECEAE2 !important;
@@ -86,43 +85,49 @@ st.markdown(
     }
 
     .sidebar-brand-box {
-        padding: 4px 0 18px 0;
-        border-bottom: 2px solid #141413;
-        margin-bottom: 20px;
+        padding: 6px 0 16px 0;
+        border-bottom: 1.5px solid #D2CEC4;
+        margin-bottom: 18px;
     }
     .sidebar-brand-code {
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 10px;
-        font-weight: 600;
-        letter-spacing: 0.14em;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
         text-transform: uppercase;
         color: #1E3A34 !important;
         margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
     .sidebar-brand-title {
+        font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif;
         font-size: 15px;
         font-weight: 700;
-        letter-spacing: 0.03em;
-        text-transform: uppercase;
+        letter-spacing: -0.01em;
         color: #141413 !important;
     }
     .sidebar-brand-desc {
-        font-size: 11.5px;
+        font-size: 12px;
         color: #5C5A55 !important;
-        margin-top: 2px;
+        margin-top: 4px;
+        line-height: 1.45;
     }
 
-    /* ── Nút "Cuộc trò chuyện mới" — Góc vuông, xanh rêu đậm ── */
+    /* ── Nút "Cuộc trò chuyện mới" ── */
     div[data-testid="stSidebar"] div[data-testid="stButton"]:first-of-type button {
         background: #1E3A34 !important;
         color: #FFFFFF !important;
+        font-family: 'Be Vietnam Pro', sans-serif !important;
         font-weight: 600 !important;
         border: 1px solid #1E3A34 !important;
-        padding: 11px 14px !important;
-        font-size: 12px !important;
-        letter-spacing: 0.08em !important;
-        text-transform: uppercase !important;
-        transition: background 0.15s ease !important;
+        border-radius: 10px !important;
+        padding: 10px 14px !important;
+        font-size: 13px !important;
+        letter-spacing: 0.02em !important;
+        box-shadow: 0 2px 6px rgba(30, 58, 52, 0.2) !important;
+        transition: all 0.2s ease !important;
     }
     div[data-testid="stSidebar"] div[data-testid="stButton"]:first-of-type button * {
         color: #FFFFFF !important;
@@ -130,16 +135,18 @@ st.markdown(
     div[data-testid="stSidebar"] div[data-testid="stButton"]:first-of-type button:hover {
         background: #142824 !important;
         border-color: #142824 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(30, 58, 52, 0.3) !important;
     }
 
     .sidebar-section-header {
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 10px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 10.5px;
         text-transform: uppercase;
-        letter-spacing: 0.14em;
+        letter-spacing: 0.05em;
         color: #6E6C66 !important;
-        margin: 26px 0 10px 0;
-        font-weight: 600;
+        margin: 24px 0 10px 0;
+        font-weight: 700;
         border-bottom: 1px solid #D5D1C8;
         padding-bottom: 6px;
     }
@@ -148,12 +155,13 @@ st.markdown(
     section[data-testid="stSidebar"] .stButton button {
         background: transparent !important;
         border: 1px solid transparent !important;
+        border-radius: 8px !important;
         text-align: left !important;
         font-size: 13px !important;
         font-weight: 400 !important;
         padding: 8px 10px !important;
         color: #383734 !important;
-        transition: all 0.12s ease !important;
+        transition: all 0.15s ease !important;
     }
     section[data-testid="stSidebar"] .stButton button:hover {
         background: #E2DFD5 !important;
@@ -164,131 +172,261 @@ st.markdown(
     /* ── Hội thoại đang chọn ── */
     div[class*="st-key-conv_current"] button {
         background: #FFFFFF !important;
-        border: 1px solid #141413 !important;
+        border: 1px solid #C8C4B8 !important;
         border-left: 3px solid #1E3A34 !important;
         color: #141413 !important;
         font-weight: 600 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
     }
 
     .sidebar-footer-info {
         font-size: 11px;
         color: #6E6C66 !important;
-        font-family: 'IBM Plex Mono', monospace;
         padding: 16px 0 0 0;
         border-top: 1px solid #D5D1C8;
         margin-top: 20px;
     }
 
     /* ══════════════════════════════════════════════
-       HEADER TRÊN CÙNG — KHỐI CHỮ NHẬT GÓC VUÔNG
+       HERO THUMBNAIL CARD — SINH ĐỘNG, BẮT MẮT & SANG TRỌNG
        ══════════════════════════════════════════════ */
-    .header-rectangle {
-        background: #FFFFFF;
-        border: 1px solid #D5D1C8;
-        border-left: 4px solid #1E3A34;
-        padding: 18px 22px;
-        margin-bottom: 32px;
+    .hero-banner {
+        background: linear-gradient(135deg, #FFFFFF 0%, #FAF8F4 55%, #F4EFE6 100%);
+        border: 1px solid #D8D4CA;
+        border-left: 5px solid #1E3A34;
+        border-radius: 14px;
+        padding: 22px 24px 18px 24px;
+        margin-bottom: 28px;
+        box-shadow: 0 4px 20px -2px rgba(30, 58, 52, 0.07), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-banner::after {
+        content: "";
+        position: absolute;
+        right: -25px;
+        bottom: -35px;
+        width: 170px;
+        height: 170px;
+        background: radial-gradient(circle, rgba(30, 58, 52, 0.04) 0%, rgba(30, 58, 52, 0) 70%);
+        pointer-events: none;
+    }
+
+    .hero-main-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .hero-emblem-box {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(145deg, #254942 0%, #152C27 100%);
+        border-radius: 12px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(30, 58, 52, 0.22);
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
-    .header-title-box h1 {
-        font-size: 15.5px;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        margin: 0;
-        color: #141413 !important;
+
+    .hero-emblem-icon {
+        width: 28px;
+        height: 28px;
+        stroke: #F6F5F0;
+        fill: none;
     }
-    .header-title-box p {
-        font-size: 12.5px;
-        color: #5C5A55 !important;
-        margin: 4px 0 0 0;
+
+    .hero-content {
+        flex: 1;
     }
-    .header-badge {
-        font-size: 10.5px;
+
+    .hero-kicker-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+        flex-wrap: wrap;
+    }
+
+    .hero-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #EBF2EE;
+        border: 1px solid #C5DBD0;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11px;
         font-weight: 600;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        padding: 5px 10px;
+        color: #1E3A34;
+        letter-spacing: 0.02em;
+    }
+
+    .live-dot-pulse {
+        width: 6.5px;
+        height: 6.5px;
+        background: #2E7D32;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.7);
+        animation: pulseDot 2s infinite;
+    }
+
+    @keyframes pulseDot {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(46, 125, 50, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 125, 50, 0); }
+    }
+
+    .hero-badge-tag {
         background: #ECEAE2;
-        border: 1px solid #C8C4B8;
-        color: #1E3A34 !important;
-        font-family: 'IBM Plex Mono', monospace;
+        border: 1px solid #D0CCC2;
+        padding: 3px 9px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #4A4844;
+        letter-spacing: 0.02em;
+    }
+
+    .hero-title {
+        font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif;
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: -0.015em;
+        color: #141413 !important;
+        margin: 2px 0 6px 0;
+        line-height: 1.35;
+    }
+
+    .hero-subtitle {
+        font-size: 13.5px;
+        color: #55534E !important;
+        margin: 0;
+        line-height: 1.55;
+    }
+
+    .hero-features-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid #E6E2D8;
+    }
+
+    .hero-feature-item {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        background: rgba(255, 255, 255, 0.75);
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #EAE5DC;
+        transition: background 0.15s ease;
+    }
+    .hero-feature-item:hover {
+        background: #FFFFFF;
+        border-color: #D2CDC3;
+    }
+
+    .feature-icon {
+        font-size: 16px;
         flex-shrink: 0;
     }
 
-    /* ══════════════════════════════════════════════
-       KHU VỰC TRÒ CHUYỆN (PHONG CÁCH CLAUDE / GEMINI)
-       ══════════════════════════════════════════════ */
+    .feature-text {
+        display: flex;
+        flex-direction: column;
+    }
 
-    /* ── Câu hỏi của người dùng: Khối góc vuông căn phải ── */
+    .feature-text strong {
+        font-size: 12px;
+        color: #1E3A34;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+    }
+
+    .feature-text span {
+        font-size: 11px;
+        color: #6E6C64;
+    }
+
+    /* ══════════════════════════════════════════════
+       KHU VỰC TRÒ CHUYỆN (BONG BÓNG TIN NHẮN)
+       ══════════════════════════════════════════════ */
     .user-msg-row {
         display: flex;
-         flex-direction: column;
+        flex-direction: column;
         align-items: flex-end;
         width: 100%;
-        margin: 28px 0 24px 0;
+        margin: 24px 0 20px 0;
     }
     .user-msg-label {
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 10px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 11px;
         font-weight: 600;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.04em;
         text-transform: uppercase;
-        color: #6E6C66;
+        color: #706E66;
         margin-bottom: 6px;
     }
     .user-msg-box {
-        background: #EAE7DF;
+        background: #EAE6DC;
         color: #141413 !important;
-        padding: 14px 18px;
-        border: 1px solid #D5D1C8;
-        border-right: 3px solid #1E3A34;
-        max-width: 78%;
+        padding: 13px 18px;
+        border: 1px solid #D5D1C7;
+        border-right: 3.5px solid #1E3A34;
+        border-radius: 12px 12px 2px 12px;
+        max-width: 80%;
         font-size: 15px;
         line-height: 1.6;
         word-break: break-word;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
     }
 
-    /* ── Câu trả lời của AI: Trải phẳng trên trang, không đóng hộp ── */
+    /* ── Phản hồi của trợ lý ── */
     .bot-label-bar {
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-top: 8px;
-        margin-bottom: 10px;
+        margin-top: 10px;
+        margin-bottom: 12px;
         padding-bottom: 6px;
         border-bottom: 1px solid #E2DFD5;
     }
     .bot-square-marker {
-        width: 7px;
-        height: 7px;
+        width: 8px;
+        height: 8px;
         background: #1E3A34;
+        border-radius: 2px;
         display: inline-block;
     }
     .bot-label-text {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: 'Plus Jakarta Sans', sans-serif;
         color: #1E3A34 !important;
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.1em;
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
         text-transform: uppercase;
     }
 
-    /* Định dạng văn bản trả lời */
     .stMarkdown p {
-        font-size: 15.5px;
-        line-height: 1.78;
+        font-size: 15px;
+        line-height: 1.75;
         color: #141413 !important;
         margin-bottom: 14px;
+        letter-spacing: normal;
     }
     .stMarkdown ul, .stMarkdown ol {
         margin: 8px 0 16px 22px;
         color: #141413 !important;
     }
     .stMarkdown li {
-        font-size: 15.5px;
+        font-size: 15px;
         line-height: 1.75;
         margin-bottom: 6px;
         color: #141413 !important;
@@ -298,37 +436,37 @@ st.markdown(
         font-weight: 600;
     }
 
-    /* ── Trích dẫn căn cứ pháp lý (Expander góc vuông) ── */
+    /* ── Expander Căn cứ pháp lý ── */
     div[data-testid="stExpander"] {
         background: #FFFFFF !important;
-        border: 1px solid #D5D1C8 !important;
+        border: 1px solid #D8D4CA !important;
+        border-radius: 10px !important;
         margin-top: 14px !important;
-        margin-bottom: 28px !important;
+        margin-bottom: 24px !important;
+        overflow: hidden !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
     }
     div[data-testid="stExpander"] summary {
         background: #ECEAE2 !important;
-        padding: 9px 14px !important;
+        padding: 10px 14px !important;
     }
-        div[data-testid="stExpander"] summary span,
+    div[data-testid="stExpander"] summary span,
     div[data-testid="stExpander"] summary p {
-        font-family: 'IBM Plex Mono', monospace !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
         color: #141413 !important;
-        font-size: 11.5px !important;
-        font-weight: 600 !important;
-        letter-spacing: 0.04em !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.03em !important;
         text-transform: uppercase !important;
     }
-
-    /* Trả lại font icon cho mũi tên của expander */
     div[data-testid="stExpander"] summary span[data-testid="stIconMaterial"] {
         font-family: "Material Symbols Rounded" !important;
         text-transform: none !important;
         letter-spacing: normal !important;
     }
-
     div[data-testid="stExpanderDetails"] {
         background: #FFFFFF !important;
-        border-top: 1px solid #D5D1C8 !important;
+        border-top: 1px solid #E2DFD5 !important;
         padding: 12px 16px !important;
     }
 
@@ -336,10 +474,11 @@ st.markdown(
         display: flex;
         align-items: baseline;
         gap: 10px;
-        padding: 7px 0;
+        padding: 8px 0;
         border-bottom: 1px solid #ECEAE2;
-        font-size: 13px;
+        font-size: 13.5px;
         color: #2C2B29 !important;
+        line-height: 1.5;
     }
     .citation-item:last-child {
         border-bottom: none;
@@ -350,108 +489,43 @@ st.markdown(
         color: #FFFFFF !important;
         font-size: 11px;
         font-weight: 600;
-        font-family: 'IBM Plex Mono', monospace;
-        padding: 1px 6px;
+        font-family: 'JetBrains Mono', monospace;
+        padding: 2px 7px;
+        border-radius: 4px;
         flex-shrink: 0;
     }
 
     /* ══════════════════════════════════════════════
-       KHUNG NHẬP LIỆU (CHAT INPUT) — KIỂU CLAUDE GÓC VUÔNG
-       ══════════════════════════════════════════════ */
-    div[data-testid="stBottom"] {
-        background: linear-gradient(180deg, rgba(246, 245, 240, 0) 0%, #F6F5F0 30%, #F6F5F0 100%) !important;
-        border-top: none !important;
-        padding-bottom: 22px !important;
-    }
-
-    div[data-testid="stChatInput"] {
-        max-width: 800px !important;
-        margin: 0 auto !important;
-        background: #FFFFFF !important;
-        border: 1px solid #B8B3A8 !important;
-        border-top: 2px solid #1E3A34 !important;
-        padding: 8px 12px !important;
-        box-shadow: 0 6px 20px rgba(20, 20, 19, 0.06) !important;
-        transition: border-color 0.15s ease !important;
-    }
-    div[data-testid="stChatInput"]:focus-within {
-        border-color: #1E3A34 !important;
-        outline: none !important;
-    }
-
-    div[data-testid="stChatInput"] * {
-        background: transparent !important;
-    }
-    div[data-testid="stChatInput"] textarea {
-        color: #141413 !important;
-        border: none !important;
-        box-shadow: none !important;
-        font-family: 'IBM Plex Sans', sans-serif !important;
-        font-size: 15px !important;
-        line-height: 1.5 !important;
-        padding: 8px 6px !important;
-        outline: none !important;
-    }
-    div[data-testid="stChatInput"] textarea::placeholder {
-        color: #85827A !important;
-        font-size: 14.5px !important;
-    }
-
-    /* Nút gửi hình vuông sắc nét */
-    div[data-testid="stChatInput"] button {
-        background: #1E3A34 !important;
-        border: 1px solid #1E3A34 !important;
-        width: 36px !important;
-        height: 36px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        transition: background 0.15s ease !important;
-    }
-    div[data-testid="stChatInput"] button:hover {
-        background: #142824 !important;
-    }
-    div[data-testid="stChatInput"] button svg {
-        fill: #FFFFFF !important;
-    }
-
-    /* ── Spinner ── */
-    div[data-testid="stSpinner"], div[data-testid="stSpinner"] * {
-        color: #5C5A55 !important;
-        font-family: 'IBM Plex Mono', monospace !important;
-        font-size: 12.5px !important;
-    }
-
-    /* ══════════════════════════════════════════════
-       MÀN HÌNH CHỜ (EMPTY STATE) — THUẦN CHỮ & KHỐI VUÔNG
+       MÀN HÌNH CHỜ (EMPTY STATE) & GỢI Ý
        ══════════════════════════════════════════════ */
     .empty-state-wrap {
-        padding: 36px 0 20px 0;
+        padding: 4px 0 20px 0;
         border-bottom: 1px solid #D5D1C8;
-        margin-bottom: 24px;
+        margin-bottom: 22px;
     }
     .empty-state-kicker {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: 'Plus Jakarta Sans', sans-serif;
         font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.12em;
+        font-weight: 700;
+        letter-spacing: 0.04em;
         text-transform: uppercase;
         color: #1E3A34 !important;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
     .empty-state-title {
-        font-size: 22px;
+        font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif;
+        font-size: 20px;
         font-weight: 700;
-        letter-spacing: -0.01em;
-        margin-bottom: 10px;
+        letter-spacing: -0.015em;
+        margin-bottom: 8px;
         color: #141413 !important;
     }
     .empty-state-desc {
         font-size: 14px;
-        color: #5C5A55 !important;
-        max-width: 620px;
-        margin-bottom: 22px;
-        line-height: 1.65;
+        color: #55534E !important;
+        max-width: 680px;
+        margin-bottom: 18px;
+        line-height: 1.6;
     }
 
     .topic-badges {
@@ -460,54 +534,170 @@ st.markdown(
         gap: 8px;
     }
     .topic-badge-item {
-        background: #ECEAE2;
-        border: 1px solid #C8C4B8;
-        padding: 5px 12px;
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 11.5px;
+        background: #FFFFFF;
+        border: 1px solid #D5D1C8;
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-size: 12.5px;
+        font-weight: 500;
         color: #2C2B29 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        transition: all 0.15s ease;
+    }
+    .topic-badge-item:hover {
+        background: #ECEAE2;
+        border-color: #1E3A34;
+        color: #1E3A34 !important;
+        transform: translateY(-1px);
     }
 
     .suggest-header {
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 11px;
-        font-weight: 600;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 11.5px;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.04em;
         color: #6E6C66;
         margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
 
-    /* ── Nút câu hỏi gợi ý — Hình chữ nhật góc vuông ── */
+    /* ── Nút câu hỏi gợi ý ── */
     div[class*="st-key-suggest_"] button {
         background: #FFFFFF !important;
         color: #141413 !important;
         border: 1px solid #D5D1C8 !important;
-        border-left: 3px solid #C8C4B8 !important;
+        border-left: 3.5px solid #C4C0B4 !important;
+        border-radius: 10px !important;
         text-align: left !important;
-        padding: 14px 16px !important;
+        padding: 13px 16px !important;
         font-size: 13.5px !important;
-        font-weight: 400 !important;
+        font-weight: 500 !important;
         line-height: 1.5 !important;
-        transition: all 0.15s ease !important;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03) !important;
+        transition: all 0.18s ease !important;
         margin-bottom: 8px !important;
     }
     div[class*="st-key-suggest_"] button:hover {
-        background: #ECEAE2 !important;
+        background: #FAF8F4 !important;
         border-color: #1E3A34 !important;
-        border-left: 3px solid #1E3A34 !important;
+        border-left: 3.5px solid #1E3A34 !important;
         color: #000000 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(30, 58, 52, 0.08) !important;
     }
 
+    /* ══════════════════════════════════════════════
+       KHUNG NHẬP LIỆU (CHAT INPUT) — ĐƠN GIẢN, BẮT MẮT, KHỬ NỀN ĐEN
+       ══════════════════════════════════════════════ */
+    div[data-testid="stBottom"],
+    div[data-testid="stBottom"] > div,
+    div[data-testid="stBottomBlockContainer"],
+    .stChatFloatingInputContainer {
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+
+    div[data-testid="stBottom"] {
+        background: linear-gradient(180deg, rgba(246, 245, 240, 0) 0%, rgba(246, 245, 240, 0.95) 24%, #F6F5F0 100%) !important;
+        padding-top: 14px !important;
+        padding-bottom: 22px !important;
+        border-top: none !important;
+    }
+
+    div[data-testid="stChatInput"] {
+        max-width: 820px !important;
+        margin: 0 auto !important;
+        background: #FFFFFF !important;
+        border: 1.5px solid #D8D4CA !important;
+        border-radius: 18px !important;
+        padding: 6px 10px 6px 18px !important;
+        box-shadow: 0 4px 20px -2px rgba(30, 58, 52, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.03) !important;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    div[data-testid="stChatInput"]:focus-within {
+        border-color: #1E3A34 !important;
+        box-shadow: 0 8px 30px -4px rgba(30, 58, 52, 0.16), 0 0 0 3px rgba(30, 58, 52, 0.1) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    div[data-testid="stChatInput"] * {
+        background: transparent !important;
+    }
+
+    div[data-testid="stChatInput"] textarea {
+        color: #141413 !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-family: 'Be Vietnam Pro', sans-serif !important;
+        font-size: 14.5px !important;
+        line-height: 1.55 !important;
+        letter-spacing: normal !important;
+        padding: 10px 4px !important;
+        outline: none !important;
+    }
+
+    div[data-testid="stChatInput"] textarea::placeholder {
+        color: #8C8980 !important;
+        font-size: 14px !important;
+        font-family: 'Be Vietnam Pro', sans-serif !important;
+        font-weight: 400 !important;
+    }
+
+    /* Nút gửi: Hiện đại, bo góc mềm mại, hover sắc sảo */
+    div[data-testid="stChatInput"] button {
+        background: linear-gradient(135deg, #244941 0%, #162E29 100%) !important;
+        border: none !important;
+        border-radius: 12px !important;
+        width: 38px !important;
+        height: 38px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: 0 2px 6px rgba(30, 58, 52, 0.25) !important;
+        transition: all 0.18s ease !important;
+    }
+
+    div[data-testid="stChatInput"] button:hover {
+        background: linear-gradient(135deg, #1A3831 0%, #0F201C 100%) !important;
+        transform: scale(1.06) translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(30, 58, 52, 0.35) !important;
+    }
+
+    div[data-testid="stChatInput"] button svg {
+        fill: #FFFFFF !important;
+    }
+
+    /* ── Spinner ── */
+    div[data-testid="stSpinner"], div[data-testid="stSpinner"] * {
+        color: #1E3A34 !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+    }
+
+    /* ── Disclaimer dưới cùng ── */
     .disclaimer-note {
         text-align: left;
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 11px;
-        color: #6E6C66 !important;
+        font-size: 12px;
+        color: #706E66 !important;
         margin-top: 32px;
         padding-top: 14px;
-        border-top: 1px solid #D5D1C8;
+        border-top: 1px solid #DCD8CE;
         line-height: 1.6;
+        letter-spacing: normal;
+    }
+    .disclaimer-inner {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .disclaimer-icon {
+        font-size: 14px;
+        flex-shrink: 0;
+        margin-top: 1px;
     }
     </style>
     """,
@@ -564,28 +754,28 @@ if not st.session_state.conversations:
     new_conversation()
 
 EXAMPLE_QUESTIONS = [
-    "01 // Điều kiện để kết hôn hợp pháp tại Việt Nam là gì?",
-    "02 // Thủ tục ly hôn thuận tình cần những giấy tờ gì?",
-    "03 // Tài sản chung và tài sản riêng trong hôn nhân được phân chia ra sao?",
-    "04 // Quyền nuôi con dưới 36 tháng tuổi sau khi ly hôn thuộc về ai?",
+    "Điều kiện để kết hôn hợp pháp tại Việt Nam theo Luật hiện hành?",
+    "Thủ tục thuận tình ly hôn cần chuẩn bị những hồ sơ, giấy tờ gì?",
+    "Tài sản chung và tài sản riêng của vợ chồng được phân định thế nào?",
+    "Quyền nuôi con dưới 36 tháng tuổi sau khi ly hôn thuộc về ai?",
 ]
 
 # ============================================================
-# Sidebar (Thuần chữ, không icon)
+# Sidebar
 # ============================================================
 with st.sidebar:
     st.markdown(
         """
         <div class="sidebar-brand-box">
-            <div class="sidebar-brand-code">HỆ THỐNG TRA CỨU</div>
+            <div class="sidebar-brand-code">⚖️ HỆ THỐNG TRA CỨU</div>
             <div class="sidebar-brand-title">LUẬT HÔN NHÂN &amp; GIA ĐÌNH</div>
-            <div class="sidebar-brand-desc">Cơ sở dữ liệu văn bản quy phạm pháp luật</div>
+            <div class="sidebar-brand-desc">Cơ sở dữ liệu văn bản quy phạm pháp luật Việt Nam</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    if st.button("CUỘC TRÒ CHUYỆN MỚI", use_container_width=True):
+    if st.button("➕  CUỘC TRÒ CHUYỆN MỚI", use_container_width=True):
         new_conversation()
         st.rerun()
 
@@ -608,12 +798,12 @@ with st.sidebar:
                     st.session_state.current_conv_id = conv_id
                     st.rerun()
             with col_del:
-                if st.button("X", key=f"del_{conv_id}", help="Xóa phiên này"):
+                if st.button("✕", key=f"del_{conv_id}", help="Xóa phiên này"):
                     delete_conversation(conv_id)
                     st.rerun()
 
     st.markdown(
-        f'<div class="sidebar-footer-info">TỔNG SỐ PHIÊN: {len(st.session_state.conversations):02d}</div>',
+        f'<div class="sidebar-footer-info">Tổng số phiên tư vấn: <strong>{len(st.session_state.conversations):02d}</strong></div>',
         unsafe_allow_html=True,
     )
 
@@ -644,16 +834,58 @@ def render_citations(citations):
 
 
 # ============================================================
-# Header trên cùng — Khối chữ nhật góc vuông, không icon
+# Header trên cùng — Thumbnail Banner Sinh Động & Sang Trọng
 # ============================================================
 st.markdown(
     """
-    <div class="header-rectangle">
-        <div class="header-title-box">
-            <h1>TRỢ LÝ PHÁP LÝ LUẬT HÔN NHÂN &amp; GIA ĐÌNH</h1>
-            <p>Phân tích tình huống và đối chiếu điều khoản trực tiếp từ văn bản pháp luật Việt Nam</p>
+    <div class="hero-banner">
+        <div class="hero-main-row">
+            <div class="hero-emblem-box">
+                <svg class="hero-emblem-icon" viewBox="0 0 24 24" stroke-width="1.8">
+                    <path d="M12 3v17"/>
+                    <path d="M5 7h14"/>
+                    <path d="M6 7l-3 7h6l-3-7z"/>
+                    <path d="M18 7l-3 7h6l-3-7z"/>
+                    <circle cx="12" cy="20" r="1.5" fill="#F6F5F0"/>
+                </svg>
+            </div>
+            <div class="hero-content">
+                <div class="hero-kicker-row">
+                    <span class="hero-status-pill">
+                        <span class="live-dot-pulse"></span>
+                        HỆ THỐNG TRỰC TUYẾN
+                    </span>
+                    <span class="hero-badge-tag">LUẬT HNGĐ 2014 &amp; VĂN BẢN HƯỚNG DẪN</span>
+                </div>
+                <h1 class="hero-title">Trợ Lý Pháp Lý Luật Hôn Nhân &amp; Gia Đình</h1>
+                <p class="hero-subtitle">
+                    Phân tích tình huống pháp lý, tra cứu quyền &amp; nghĩa vụ, đối chiếu trực tiếp từ cơ sở dữ liệu luật Việt Nam.
+                </p>
+            </div>
         </div>
-        <div class="header-badge">VĂN BẢN HIỆN HÀNH</div>
+        <div class="hero-features-bar">
+            <div class="hero-feature-item">
+                <span class="feature-icon">⚖️</span>
+                <div class="feature-text">
+                    <strong>Căn cứ xác thực</strong>
+                    <span>Trích dẫn trực tiếp Điều, Khoản</span>
+                </div>
+            </div>
+            <div class="hero-feature-item">
+                <span class="feature-icon">⚡</span>
+                <div class="feature-text">
+                    <strong>Phân tích tức thì</strong>
+                    <span>AI bám sát tình huống thực tế</span>
+                </div>
+            </div>
+            <div class="hero-feature-item">
+                <span class="feature-icon">🛡️</span>
+                <div class="feature-text">
+                    <strong>Chính xác &amp; Khách quan</strong>
+                    <span>Không bịa điều luật, minh bạch</span>
+                </div>
+            </div>
+        </div>
     </div>
     """,
     unsafe_allow_html=True,
@@ -669,31 +901,31 @@ if not has_messages:
         """
         <div class="empty-state-wrap">
             <div class="empty-state-kicker">CHẾ ĐỘ TRA CỨU TRỰC TUYẾN</div>
-            <div class="empty-state-title">Nhập nội dung hoặc tình huống pháp lý cần giải đáp</div>
+            <div class="empty-state-title">Nhập tình huống hoặc câu hỏi pháp lý của bạn</div>
             <div class="empty-state-desc">
-                Hệ thống hỗ trợ phân tích quy định thuộc Luật Hôn nhân và Gia đình, cung cấp phản hồi kèm theo trích dẫn Điều, Khoản cụ thể.
+                Hệ thống tự động phân tích quy định thuộc Luật Hôn nhân &amp; Gia đình hiện hành, cung cấp nội dung giải đáp kèm trích dẫn điều khoản cụ thể.
             </div>
             <div class="topic-badges">
-                <span class="topic-badge-item">ĐĂNG KÝ KẾT HÔN</span>
-                <span class="topic-badge-item">LY HÔN THUẬN TÌNH / ĐƠN PHƯƠNG</span>
-                <span class="topic-badge-item">CHẾ ĐỘ TÀI SẢN VỢ CHỒNG</span>
-                <span class="topic-badge-item">QUYỀN NUÔI CON &amp; CẤP DƯỠNG</span>
-                <span class="topic-badge-item">NHẬN CON NUÔI</span>
-                <span class="topic-badge-item">GIÁM HỘ</span>
+                <span class="topic-badge-item">💍 Đăng ký kết hôn</span>
+                <span class="topic-badge-item">📑 Ly hôn thuận tình / Đơn phương</span>
+                <span class="topic-badge-item">💰 Chế độ tài sản vợ chồng</span>
+                <span class="topic-badge-item">👶 Quyền nuôi con &amp; Cấp dưỡng</span>
+                <span class="topic-badge-item">🏡 Con nuôi &amp; Giám hộ</span>
+                <span class="topic-badge-item">⚖️ Xác định cha, mẹ, con</span>
             </div>
         </div>
-        <div class="suggest-header">CÂU HỎI MẪU THAM KHẢO</div>
+        <div class="suggest-header">💡 CÂU HỎI TÌNH HUỐNG THAM KHẢO</div>
         """,
         unsafe_allow_html=True,
     )
 
     cols = st.columns(2)
     for i, q in enumerate(EXAMPLE_QUESTIONS):
-        clean_q = q.split("// ", 1)[1] if "// " in q else q
+        btn_label = f"0{i+1} ── {q}"
         with cols[i % 2]:
             with st.container(key=f"suggest_{i}"):
-                if st.button(q, key=f"suggest_btn_{i}", use_container_width=True):
-                    st.session_state.pending_question = clean_q
+                if st.button(btn_label, key=f"suggest_btn_{i}", use_container_width=True):
+                    st.session_state.pending_question = q
 
 # ── Render lịch sử hội thoại ──
 for msg in current_conv["messages"]:
@@ -759,7 +991,7 @@ if question:
         unsafe_allow_html=True,
     )
 
-    with st.spinner("ĐANG ĐỐI CHIẾU CƠ SỞ DỮ LIỆU PHÁP LUẬT..."):
+    with st.spinner("Đang đối chiếu cơ sở dữ liệu pháp luật..."):
         try:
             final_state = agent.run(question, thread_id=current_conv_id)
             answer = final_state.get(
@@ -786,7 +1018,10 @@ if question:
 st.markdown(
     """
     <div class="disclaimer-note">
-        LƯU Ý: Nội dung phản hồi được trích xuất tự động từ văn bản pháp luật hiện hành và chỉ mang tính chất tham khảo thông tin, không thay thế văn bản tư vấn pháp lý chính thức từ Luật sư.
+        <div class="disclaimer-inner">
+            <span class="disclaimer-icon">ℹ️</span>
+            <span><strong>Lưu ý:</strong> Nội dung phản hồi được trích xuất tự động từ văn bản pháp luật hiện hành và chỉ mang tính chất tham khảo thông tin, không thay thế văn bản tư vấn pháp lý chính thức từ Luật sư.</span>
+        </div>
     </div>
     """,
     unsafe_allow_html=True,
