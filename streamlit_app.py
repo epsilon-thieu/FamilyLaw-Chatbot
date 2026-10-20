@@ -53,8 +53,32 @@ st.markdown(
         background: #F6F5F0 !important;
     }
 
-    #MainMenu, footer, header {
+    #MainMenu, footer {
         visibility: hidden !important;
+    }
+
+    /* giữ header để còn nút mở sidebar, chỉ làm nó trong suốt */
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+    }
+
+    /* ẩn riêng Deploy / menu ba chấm */
+    [data-testid="stToolbar"],
+    [data-testid="stDecoration"],
+    [data-testid="stStatusWidget"] {
+        visibility: hidden !important;
+    }
+
+    /* đảm bảo nút mở sidebar luôn hiện và đúng màu */
+    [data-testid="stExpandSidebarButton"],
+    [data-testid="stSidebarCollapsedControl"],
+    [data-testid="collapsedControl"] {
+        visibility: visible !important;
+    }
+    [data-testid="stExpandSidebarButton"] *,
+    [data-testid="stSidebarCollapsedControl"] *,
+    [data-testid="collapsedControl"] * {
+        color: #1E3A34 !important;
     }
 
     /* ── Cột nội dung chính căn giữa chuẩn đọc ── */
